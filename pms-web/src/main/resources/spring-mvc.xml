@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		 http://www.springframework.org/schema/task
+	     http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/cache 
+        http://www.springframework.org/schema/cache/spring-cache.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+	
+	<!-- 将@Service注解给去掉 -->
+    <context:component-scan base-package="com.jschrj.*,com.jschrj.*.*" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service" />
+    </context:component-scan>
+	
+	<!-- springmvc拦截器-->
+	<mvc:interceptors>   
+		<!-- 页面登录session拦截器-->
+		<mvc:interceptor>
+			<!-- 一级目录 -->  
+			<mvc:mapping path="/*.do"/>
+			<!-- 二级目录 -->  
+			<mvc:mapping path="/*/*.do"/>
+			<!-- 拦截器不需要拦截的路径 -->
+			<mvc:exclude-mapping path="/account/login.do"/>
+			<mvc:exclude-mapping path="/account/checkLogin.do"/>
+			<mvc:exclude-mapping path="/account/getVerifyCode.do"/>
+			<mvc:exclude-mapping path="/account/verifyCodeShow.do"/>
+			<bean class="com.jschrj.interceptor.AuthorizationHandler"/>
+		</mvc:interceptor>
+	</mvc:interceptors>    
+	
+	<!-- springmvc全局异常捕获处理-->
+	<bean class="com.jschrj.interceptor.ExceptionHandler"/>
+
+	<bean id="appProperty"
+		  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<array>
+				<value>classpath:conf.properties</value>
+			</array>
+		</property>
+	</bean>
+
+	<!-- SpringMVC上传文件时,需配置MultipartResolver处理器 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="UTF-8"></property>
+		<property name="maxUploadSize" value="524288000"></property>
+	</bean>
+
+
+	<!-- springmvc传json值给前台时的乱码问题 -->
+	<mvc:annotation-driven>
+	    <mvc:message-converters>
+	        <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+	            <property name="supportedMediaTypes">
+	                <list>
+	                    <value>application/json;charset=UTF-8</value>
+	                </list>
+	            </property>
+	        </bean>
+	    </mvc:message-converters>
+	</mvc:annotation-driven>       	
+</beans>

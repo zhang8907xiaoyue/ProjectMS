@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.task.ITaskDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.task.Task">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="storyid" jdbcType="INTEGER" property="storyid" />
+    <result column="rwtype" jdbcType="INTEGER" property="rwtype" />
+    <result column="assignto" jdbcType="INTEGER" property="assignto" />
+    <result column="estimate" jdbcType="INTEGER" property="estimate" />
+    <result column="deadline" jdbcType="VARCHAR" property="deadline" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jschrj.pojo.task.Task">
+    <result column="content" jdbcType="LONGVARBINARY" property="content" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, storyid, rwtype, assignto, estimate, deadline, status, title, userid, username, 
+    createtime, updatetime
+  </sql>
+  <sql id="Blob_Column_List">
+    content
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select a.id,a.storyid,a.status,a.rwtype,a.title,a.assignto,a.estimate,CONVERT(content USING utf8) contenthtml,
+           b.realname assigntoname,a.createtime,a.deadline,a.username
+    from pms_task a,sys_user b
+    where a.id = #{id,jdbcType=INTEGER}
+      and a.assignto=b.id
+  </select>
+  <select id="getTaskOptListByTaskid" resultType="com.jschrj.pojo.base.Extend">
+    select optdate ext1,username ext2,type ext3,content ext4
+    from
+      (select createtime optdate,username username,0 type,'' content
+       from pms_task
+       where id=#{taskid,jdbcType=INTEGER}
+       UNION ALL
+       SELECT createtime AS dates, username AS username, 1 AS type, content
+       FROM pms_taskcontrol
+       WHERE taskid = #{taskid,jdbcType=INTEGER} and type=0
+       UNION ALL
+       SELECT createtime AS dates, username AS username, 2 AS type, content
+       FROM pms_taskcontrol
+       WHERE taskid = #{taskid,jdbcType=INTEGER} and type=1
+       UNION all
+       select createtime dates,username username,3 type,content
+       from pms_taskremark
+       where taskid=#{taskid,jdbcType=INTEGER}
+       UNION all
+       select createtime dates,username username,4 type,content
+       from pms_tasklog
+       where taskid=#{taskid,jdbcType=INTEGER}) a
+    ORDER BY optdate
+  </select>
+  <select id="getTasklistByStoryid" resultType="com.jschrj.pojo.task.Task">
+    select a.id,a.storyid,a.status,a.rwtype,a.title,a.assignto,a.estimate,CONVERT(content USING utf8) contenthtml,
+           b.realname assigntoname,a.createtime,a.deadline,a.username
+    from pms_task a,sys_user b
+    where a.status<![CDATA[<>]]>0 and a.storyid=#{storyid}
+      and a.assignto=b.id order by createtime
+  </select>
+  <select id="getSortedCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_task a,pms_story b,base_project c,base_source d,sys_user e
+    where a.status<![CDATA[<>]]>0 and a.storyid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and b.source=d.id and a.assignto=e.id
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="storyid!=null and storyid!=''">
+      and a.storyid=#{storyid}
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and e.name in
+      <foreach collection="assignto" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>
+  </select>
+  <select id="getSortedPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, storyid, `status`, estimate, title, assigntoname, createtime,deadline
+    from(select
+    a.id, a.storyid, a.status, a.estimate, a.title,e.realname assigntoname, a.createtime, a.deadline
+    from pms_task a,pms_story b,base_project c,base_source d,sys_user e
+    where a.status<![CDATA[<>]]>0 and a.storyid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and b.source=d.id and a.assignto=e.id
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="storyid!=null and storyid!=''">
+      and a.storyid=#{storyid}
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and e.name in
+      <foreach collection="assignto" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>) m
+    <if test="order==null || order==''">
+      ORDER BY createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getTodoCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_task a,pms_story b,base_project c,base_source d
+    where a.status=1 and a.storyid=b.id
+      and b.status<![CDATA[<>]]>0 and b.project=c.id
+      and b.source=d.id
+      and a.assignto=#{assignto,jdbcType=VARCHAR}
+  </select>
+  <select id="getTodoPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, storyid, pri, status, projectname, sourcename, estimate, title, deadline
+    from(select
+    a.id, b.id storyid, b.pri, a.status, c.name projectname, d.name sourcename,
+    a.estimate, a.title, a.deadline
+    from pms_task a,pms_story b,base_project c,base_source d
+    where a.status in (1,3) and a.storyid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and b.source=d.id
+    and a.assignto=#{assignto,jdbcType=VARCHAR}) m
+    <if test="order==null || order==''">
+      ORDER BY m.deadline desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getTasklistCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_task a
+    join pms_story b on(a.storyid=b.id)
+    join base_project c on(b.project=c.id)
+    join base_source d on(b.source=d.id)
+    left join pms_taskcomplete e on(a.id=e.taskid)
+    join sys_user f on(a.userid=f.id)
+    join sys_user g on(a.assignto=g.id)
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="finishedtimeS!=null and finishedtimeS!=''">
+      and e.createtime <![CDATA[>=]]> #{finishedtimeS}
+    </if>
+    <if test="finishedtimeE!=null and finishedtimeE!=''">
+      and e.createtime <![CDATA[<=]]> #{finishedtimeE}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project}
+    </if>
+    <if test="source!=null and source!=''">
+      and b.source=#{source}
+    </if>
+    <if test="userid!=null and userid!=''">
+      and f.name in
+      <foreach collection="userid" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and g.name in
+      <foreach collection="assignto" index="index" item="item2" open="(" separator="," close=")">
+        #{item2}
+      </foreach>
+    </if>
+  </select>
+  <select id="getTasklistPage" parameterType="map" resultType="com.jschrj.pojo.task.Task">
+    select
+    id, status, storyid, pri, projectname, sourcename, estimate, title, deadline,
+    createtime,username,assigntoname,updatetime
+    from(select
+    a.id, a.status, b.id storyid, b.pri, c.name projectname, d.name sourcename,
+    a.estimate, a.title, a.deadline, a.createtime, a.username, g.realname assigntoname, e.createtime updatetime
+    from pms_task a
+         join pms_story b on(a.storyid=b.id)
+         join base_project c on(b.project=c.id)
+         join base_source d on(b.source=d.id)
+         left join pms_taskcomplete e on(a.id=e.taskid)
+         join sys_user f on(a.userid=f.id)
+         join sys_user g on(a.assignto=g.id)
+    where a.status<![CDATA[<>]]>0 and b.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="finishedtimeS!=null and finishedtimeS!=''">
+      and e.createtime <![CDATA[>=]]> #{finishedtimeS}
+    </if>
+    <if test="finishedtimeE!=null and finishedtimeE!=''">
+      and e.createtime <![CDATA[<=]]> #{finishedtimeE}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project}
+    </if>
+    <if test="source!=null and source!=''">
+      and b.source=#{source}
+    </if>
+    <if test="userid!=null and userid!=''">
+      and f.name in
+      <foreach collection="userid" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and g.name in
+      <foreach collection="assignto" index="index" item="item2" open="(" separator="," close=")">
+        #{item2}
+      </foreach>
+    </if>
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY m.deadline desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_task
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.task.Task">
+    insert into pms_task (id, storyid, rwtype, 
+      assignto, estimate, deadline, 
+      status, title, userid, 
+      username, createtime, updatetime, 
+      content)
+    values (#{id,jdbcType=INTEGER}, #{storyid,jdbcType=INTEGER}, #{rwtype,jdbcType=INTEGER}, 
+      #{assignto,jdbcType=INTEGER}, #{estimate,jdbcType=INTEGER}, #{deadline,jdbcType=VARCHAR},
+      #{status,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER}, 
+      #{username,jdbcType=VARCHAR}, #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR},
+      #{content,jdbcType=LONGVARBINARY})
+  </insert>
+  <insert id="insertSelective" keyProperty="id" useGeneratedKeys="true" parameterType="com.jschrj.pojo.task.Task">
+    insert into pms_task
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="storyid != null">
+        storyid,
+      </if>
+      <if test="rwtype != null">
+        rwtype,
+      </if>
+      <if test="assignto != null">
+        assignto,
+      </if>
+      <if test="estimate != null">
+        estimate,
+      </if>
+      <if test="deadline != null">
+        deadline,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="storyid != null">
+        #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="rwtype != null">
+        #{rwtype,jdbcType=INTEGER},
+      </if>
+      <if test="assignto != null">
+        #{assignto,jdbcType=INTEGER},
+      </if>
+      <if test="estimate != null">
+        #{estimate,jdbcType=INTEGER},
+      </if>
+      <if test="deadline != null">
+        #{deadline,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARBINARY},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.task.Task">
+    update pms_task
+    <set>
+      <if test="storyid != null">
+        storyid = #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="rwtype != null">
+        rwtype = #{rwtype,jdbcType=INTEGER},
+      </if>
+      <if test="assignto != null">
+        assignto = #{assignto,jdbcType=INTEGER},
+      </if>
+      <if test="estimate != null">
+        estimate = #{estimate,jdbcType=INTEGER},
+      </if>
+      <if test="deadline != null">
+        deadline = #{deadline,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      updatetime = SYSDATE(),
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARBINARY},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.jschrj.pojo.task.Task">
+    update pms_task
+    set storyid = #{storyid,jdbcType=INTEGER},
+      rwtype = #{rwtype,jdbcType=INTEGER},
+      assignto = #{assignto,jdbcType=INTEGER},
+      estimate = #{estimate,jdbcType=INTEGER},
+      deadline = #{deadline,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE(),
+      content = #{content,jdbcType=LONGVARBINARY}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.task.Task">
+    update pms_task
+    set storyid = #{storyid,jdbcType=INTEGER},
+      rwtype = #{rwtype,jdbcType=INTEGER},
+      assignto = #{assignto,jdbcType=INTEGER},
+      estimate = #{estimate,jdbcType=INTEGER},
+      deadline = #{deadline,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE(),
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

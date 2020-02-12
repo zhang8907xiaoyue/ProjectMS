@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.release.IReleaseDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.release.Release">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="referid" jdbcType="INTEGER" property="referid" />
+    <result column="customerid" jdbcType="INTEGER" property="customerid" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="version" jdbcType="VARCHAR" property="version" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, type, referid, customerid, status, version, userid, username, createtime, updatetime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pms_release
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getReleasedCounts" parameterType="map" resultType="int">
+    select count(1)
+    from (select distinct projectname,customername,version,username,updatetime
+    from (select
+    c.name projectname,d.name customername,
+    a.version, a.username, a.updatetime,c.listid pl,d.listid cl
+    from pms_release a,pms_story b,base_project c,base_customer d
+    where a.status=2 and a.referid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and a.customerid=d.id
+    <if test="starttime!=null and starttime!=''">
+      and a.updatetime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.updatetime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="customerid!=null and customerid!=''">
+      and a.customerid=#{customerid}
+    </if>
+    union all
+    select
+    c.name projectname,d.name customername,
+    a.version, a.username, a.updatetime,c.listid pl,d.listid cl
+    from pms_release a,pms_bug b,base_project c,base_customer d
+    where a.status=2 and a.referid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and a.customerid=d.id
+    <if test="starttime!=null and starttime!=''">
+      and a.updatetime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.updatetime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="customerid!=null and customerid!=''">
+      and a.customerid=#{customerid}
+    </if>) n) m
+  </select>
+  <select id="getReleasedPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    distinct project,projectname,customerid,customername,version,username,updatetime,pl,cl
+    from(select
+    b.project, c.name projectname, a.customerid, d.name customername,
+    a.version, a.username, a.updatetime,c.listid pl,d.listid cl
+    from pms_release a,pms_story b,base_project c,base_customer d
+    where a.status=2 and a.referid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and a.customerid=d.id
+    <if test="starttime!=null and starttime!=''">
+      and a.updatetime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.updatetime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="customerid!=null and customerid!=''">
+      and a.customerid=#{customerid}
+    </if>
+      union all
+    select
+    b.project, c.name projectname, a.customerid, d.name customername,
+    a.version, a.username, a.updatetime,c.listid pl,d.listid cl
+    from pms_release a,pms_bug b,base_project c,base_customer d
+    where a.status=2 and a.referid=b.id
+    and b.status<![CDATA[<>]]>0 and b.project=c.id
+    and a.customerid=d.id
+    <if test="starttime!=null and starttime!=''">
+      and a.updatetime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.updatetime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="project!=null and project!=''">
+      and b.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="customerid!=null and customerid!=''">
+      and a.customerid=#{customerid}
+    </if>) m
+    <if test="order==null || order==''">
+      ORDER BY pl,cl,updatetime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="selectOtherRelease" parameterType="map" resultType="int">
+    select count(id)
+    from pms_release
+    where id<![CDATA[<>]]>#{id}
+      and `type`=#{type}
+      and referid=#{referid} and status=1
+  </select>
+  <select id="getReleaselistByTypeReferid" parameterType="map" resultType="com.jschrj.pojo.release.Release">
+    select
+      customerid,b.name customername
+    from pms_release a, base_customer b
+    where a.status<![CDATA[<>]]>0 and a.referid=#{referid}
+      and a.type=#{type} and a.customerid=b.id
+    order by b.listid
+  </select>
+  <select id="getReleaseList" resultType="com.jschrj.pojo.release.Release">
+    select id, project, projectname, customerid, customername,
+           type, referid, title, createtime,updatetime
+    from
+    (select a.id, c.project, d.name projectname, a.customerid, b.name customername,
+           a.type, a.referid, c.title, c.openeddate createtime,a.createtime updatetime,b.listid cl,d.listid pl
+    from pms_release a, base_customer b ,pms_story c, base_project d
+    where a.status=1 and a.type=1 and a.referid=c.id
+      and b.status=1 and a.customerid=b.id and c.status=4
+      and c.project=d.id
+    union all
+    select a.id, c.project, d.name projectname, a.customerid, b.name customername,
+           a.type, a.referid, c.title, c.createtime createtime,a.createtime updatetime,b.listid cl,d.listid pl
+    from pms_release a, base_customer b ,pms_bug c, base_project d
+    where a.status=1 and a.type=2 and a.referid=c.id
+      and b.status=1 and a.customerid=b.id and c.status=3
+      and c.project=d.id) m
+    order by m.pl,m.cl,m.updatetime
+  </select>
+  <select id="getReleaselistByProjectCustomer" parameterType="map" resultType="com.jschrj.pojo.task.Taskcomplete">
+    select estimate, storyid, id, title, releaseremarkhtml, sqlname, `sql`,createtime
+    from
+      (select a.id estimate, 1 storyid, c.id, c.title, CONVERT(e.releaseremark USING utf8) releaseremarkhtml, e.sqlname, e.`sql`, e.createtime
+       from pms_release a, pms_story c, pms_task d, pms_taskcomplete e
+       where a.status=1 and a.type=1 and a.referid=c.id
+         and a.customerid=#{customer} and c.status=4
+         and c.project=#{project} and c.id=d.storyid and d.status=2
+         and d.id=e.taskid
+       union all
+       select a.id estimate, 2 storyid, c.id, c.title, CONVERT(c.releaseremark USING utf8) releaseremarkhtml, c.sqlname, c.`sql`, c.finishedtime createtime
+       from pms_release a, pms_bug c
+       where a.status=1 and a.type=2 and a.referid=c.id
+         and a.customerid=#{customer} and c.status=3
+         and c.project=#{project} ) m
+    order by m.createtime
+  </select>
+  <select id="getReleasedList" resultType="com.jschrj.pojo.release.Release">
+    select id, project, projectname, customerid, customername,
+           `type`, referid, title, createtime,updatetime
+    from
+      (select a.id, c.project, d.name projectname, a.customerid, b.name customername,
+              a.type, a.referid, c.title, c.openeddate createtime,a.createtime updatetime,b.listid cl,d.listid pl
+       from pms_release a, base_customer b ,pms_story c, base_project d
+       where a.status=2 and a.type=1 and a.referid=c.id
+         and a.customerid=b.id
+         and c.project=d.id
+         and a.customerid=#{customerid}
+         and c.project=#{project}
+         and a.version=#{version}
+       union all
+       select a.id, c.project, d.name projectname, a.customerid, b.name customername,
+              a.type, a.referid, c.title, c.createtime createtime,a.createtime updatetime,b.listid cl,d.listid pl
+       from pms_release a, base_customer b ,pms_bug c, base_project d
+       where a.status=2 and a.type=2 and a.referid=c.id
+         and a.customerid=b.id
+         and c.project=d.id
+         and a.customerid=#{customerid}
+         and c.project=#{project}
+         and a.version=#{version}) m
+    order by m.pl,m.cl,m.updatetime
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_release
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByReferid" parameterType="java.lang.Integer">
+    delete from pms_release
+    where referid = #{referid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.release.Release">
+    insert into pms_release (id, type, referid, 
+      customerid, status, version, 
+      userid, username, createtime, 
+      updatetime)
+    values (#{id,jdbcType=INTEGER}, #{type,jdbcType=INTEGER}, #{referid,jdbcType=INTEGER}, 
+      #{customerid,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{version,jdbcType=VARCHAR}, 
+      #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{createtime,jdbcType=VARCHAR},
+      #{updatetime,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.release.Release">
+    insert into pms_release
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="referid != null">
+        referid,
+      </if>
+      <if test="customerid != null">
+        customerid,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="version != null">
+        version,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="referid != null">
+        #{referid,jdbcType=INTEGER},
+      </if>
+      <if test="customerid != null">
+        #{customerid,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="version != null">
+        #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.release.Release">
+    update pms_release
+    <set>
+      <if test="type != null">
+        type = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="referid != null">
+        referid = #{referid,jdbcType=INTEGER},
+      </if>
+      <if test="customerid != null">
+        customerid = #{customerid,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="version != null">
+        version = #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      updatetime = SYSDATE()
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.release.Release">
+    update pms_release
+    set type = #{type,jdbcType=INTEGER},
+      referid = #{referid,jdbcType=INTEGER},
+      customerid = #{customerid,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
+      version = #{version,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE()
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

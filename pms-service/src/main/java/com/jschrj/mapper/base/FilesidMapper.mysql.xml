@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.base.IFilesidDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.base.Filesid">
+    <result column="ID" jdbcType="INTEGER" property="id" />
+    <result column="REQUESTDATE" jdbcType="VARCHAR" property="date" />
+  </resultMap>
+  <select id="getLastRequestDate"  resultType="String">
+    select 
+    requestdate
+    from base_filesid
+  </select>
+  <select id="getId"  resultType="int">
+    select 
+    id
+    from base_filesid
+  </select>
+  <insert id="insert">
+    insert into base_filesid
+    ID,REQUESTDATE
+    values(1,DATE_FORMAT(NOW(),'%Y%m%d'))
+  </insert>
+  <update id="added">
+  	update base_filesid set id=id+1
+  </update>
+  <update id="newDay">
+  	update base_filesid set id=1,requestdate=DATE_FORMAT(NOW(),'%Y%m%d')
+  </update>
+</mapper>

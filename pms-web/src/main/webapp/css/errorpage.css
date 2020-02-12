@@ -1,0 +1,42 @@
+.msg_tip_body{
+margin:50px auto;
+padding-top:50px;
+width:950px;
+min-height:230px;
+_height:230px;
+background-color: #FFFBE2;
+border:1px solid #EDDDAB;
+}
+.msg_tip_box{
+margin:0 auto;
+width:600px;
+}
+.msg_tip_title{
+height:25px;
+border-bottom:1px solid #6AB3D7;
+}
+.msg_tip_title em{
+font-style:normal;
+padding-left:1em;
+color:#163463;
+font-size:14px;
+font-weight:700;
+}
+.alert_error{
+background:url(../images/error_big.gif) no-repeat;
+background-position:0 10px;
+margin: 20px;
+padding: 0 0 0 58px;
+}
+.msg_tip_content{
+color:#FB6C03;
+font:16px/28px "黑体";
+}
+.alert_bl{
+margin-top:5px;
+font-size:14px;
+}
+.alert_bl a:link, .alert_bl a:visited{
+color:#29548E;
+text-decoration:underline;
+}

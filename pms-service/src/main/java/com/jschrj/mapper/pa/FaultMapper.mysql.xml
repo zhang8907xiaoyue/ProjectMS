@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.pa.IFaultDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.pa.Fault">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="employeeid" jdbcType="INTEGER" property="employeeid" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jschrj.pojo.pa.Fault">
+    <result column="content" jdbcType="LONGVARBINARY" property="content" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, employeeid, title, status, userid, username, createtime, updatetime
+  </sql>
+  <sql id="Blob_Column_List">
+    content
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+      a.id, a.status, a.employeeid, a.title, a.userid, a.username, a.createtime,
+      CONVERT(content USING utf8) contenthtml
+    from pa_fault a
+    where a.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getFaultCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pa_fault a
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+  </select>
+  <select id="getFaultPage" parameterType="map" resultType="com.jschrj.pojo.pa.Fault">
+    select
+    id, status, employeeid, employee, title, userid, username, createtime
+    from(select
+    a.id, a.status, a.employeeid, b.realname employee, a.title, a.userid, a.username, a.createtime
+    from pa_fault a,sys_user b
+    where a.status<![CDATA[<>]]>0 and a.employeeid=b.id
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY m.createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pa_fault
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.pa.Fault">
+    insert into pa_fault (id, employeeid,
+      title, userid, username, 
+      createtime, updatetime, content
+      )
+    values (#{id,jdbcType=INTEGER}, #{employeeid,jdbcType=INTEGER},
+      #{title,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, 
+      #{createtime,jdbcType=TIMESTAMP}, #{updatetime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARBINARY}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.pa.Fault">
+    insert into pa_fault
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="employeeid != null">
+        employeeid,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="employeeid != null">
+        #{employeeid,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARBINARY},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.pa.Fault">
+    update pa_fault
+    <set>
+      <if test="employeeid != null">
+        employeeid = #{employeeid,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      updatetime = SYSDATE(),
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARBINARY},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.jschrj.pojo.pa.Fault">
+    update pa_fault
+    set employeeid = #{employeeid,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=TIMESTAMP},
+      updatetime = #{updatetime,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=LONGVARBINARY}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.pa.Fault">
+    update pa_fault
+    set employeeid = #{employeeid,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=TIMESTAMP},
+      updatetime = #{updatetime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.system.IRolePowerDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.system.RolePower">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <id column="ROLEID" jdbcType="INTEGER" property="roleid" />
+    <id column="APPID" jdbcType="INTEGER" property="appid" />
+  </resultMap>
+  <select id="getRolePowerList" parameterType="map" resultMap="BaseResultMap">
+    select 
+    a.id,a.name
+    from sys_application a,sys_rolepower b
+    where a.status=1 
+    and a.id=b.appid
+    and b.roleid=#{roleid}
+    order by a.listid
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="com.jschrj.pojo.system.RolePower">
+    delete from sys_rolepower
+    where ID = #{id,jdbcType=INTEGER}
+      and ROLEID = #{roleid,jdbcType=INTEGER}
+      and APPID = #{appid,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByRoleid" parameterType="java.lang.Integer">
+    delete from sys_rolepower
+    where ROLEID = #{roleid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.system.RolePower">
+    insert into sys_rolepower (ID, ROLEID, APPID
+      )
+    values (#{id,jdbcType=INTEGER}, #{roleid,jdbcType=INTEGER}, #{appid,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.system.RolePower">
+    insert into sys_rolepower
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="roleid != null">
+        ROLEID,
+      </if>
+      <if test="appid != null">
+        APPID,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="roleid != null">
+        #{roleid,jdbcType=INTEGER},
+      </if>
+      <if test="appid != null">
+        #{appid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+</mapper>

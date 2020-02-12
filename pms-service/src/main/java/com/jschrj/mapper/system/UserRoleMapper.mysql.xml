@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.system.IUserRoleDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.system.UserRole">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <id column="USERID" jdbcType="INTEGER" property="userid" />
+    <id column="ROLEID" jdbcType="INTEGER" property="roleid" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_userrole
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByUserid" parameterType="java.lang.Integer">
+    delete from sys_userrole
+    where USERID = #{userid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.system.UserRole">
+    insert into sys_userrole (ID, USERID, ROLEID
+      )
+    values (#{id,jdbcType=INTEGER}, #{userid,jdbcType=INTEGER}, #{roleid,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.system.UserRole">
+    insert into sys_userrole
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="userid != null">
+        USERID,
+      </if>
+      <if test="roleid != null">
+        ROLEID,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="roleid != null">
+        #{roleid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+</mapper>

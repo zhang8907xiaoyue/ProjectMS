@@ -1,0 +1,161 @@
+/*ztree下拉框*/
+.ztree-content{
+	margin-top: 10px;
+    border: 1px solid #d5d5d5;
+    background: #ffffff;
+    width: 220px;
+    height: 250px;
+    overflow-y: scroll;
+    overflow-x: auto;
+    z-index:9999999;
+}
+/*属性表格样式*/
+.table-attribute{
+	border-collapse: collapse;
+	border-right: 1px solid #C4BD97;
+    border-bottom: 1px solid #C4BD97;
+	width:100%;
+	word-wrap:break-word;word-break:break-all;
+}
+
+.table-attribute  td {
+	border-left: 1px solid #C4BD97;
+    border-top: 1px solid #C4BD97;
+}
+
+.table-attribute .td-title {
+	text-align: center;
+	padding: 5px 0px 5px 0px;
+	background: #DAEEF3;
+	color: #215967;
+	font-size: 12pt;
+    font-weight: 700;
+}
+
+.table-attribute .td-name {
+	text-align: center;
+	padding: 7px 0px 7px 0px;
+	background: #DAEEF3;
+	color: #215967;
+	font-size: 10pt;
+    font-weight: 700;
+}
+
+.table-attribute .td-value {
+	text-align: center;
+	padding: 5px 0px 5px 0px;
+	background: #fff;
+	color: #000000;
+	font-size: 10pt;
+    font-weight: 400;
+}
+/*查询toolbar*/
+.search-filed{
+	width：100%;
+}
+.search-filed .td-label{
+	padding: 2px 2px 2px 10px;
+	text-align: right;
+}
+.search-filed .td-info{
+	padding: 2px 10px 2px 2px;
+	text-align: left;
+	width:181px;
+}
+.toolbar{
+	padding:7px 10px;
+	text-decoration: none;
+}
+.toolbar:hover{
+	background:#abbac3;
+	text-decoration: none;
+}
+#searchForm{
+	background: #f7f7f7;
+}
+.option,.view{
+	color:blue;
+}
+
+.zxy-title{
+	display: block;
+	background: #f8fafe;
+	border-bottom: 1px solid #e5e5e5;
+	padding: 13px 20px;
+}
+
+.zxy-title .storyid{
+	color: #666;
+	padding:0px 10px;
+	border: solid 1px rgb(170, 170, 170);
+}
+
+fieldset{
+	margin-bottom: 15px;
+	border: 1px solid #e5e5e5;
+	padding: 10px 15px 15px;
+}
+
+fieldset legend{
+	width: auto;
+	margin: 0 0 0 -5px;
+	font-size: 13px;
+	font-weight: bold;
+	border-bottom: 0;
+	padding: 0 5px;
+}
+
+.tb-name{
+	padding: 3px 8px;
+	vertical-align: middle;
+	line-height: 18px;
+	text-align: right;
+	width: 80px;
+}
+
+.tb-value{
+	padding: 3px 8px;
+	vertical-align: middle;
+	line-height: 18px;
+	text-align: left;
+	color:#141414;
+}
+
+.taskinfo,.usecaseinfo,.buginfo{
+	display: block;
+	color: blue;
+}
+
+table#step,table#tb-tasklist,table#tb-usecaselist,table#tb-buglist{
+	width:100%;
+	border: 1px solid #ddd;
+}
+
+#step th,#tb-tasklist th,#tb-usecaselist th,#tb-buglist th{
+	background-color: #f1f1f1;
+	border-bottom: 1px solid #ddd;
+}
+
+#step th,#step td,#tb-tasklist th,#tb-tasklist td,#tb-usecaselist th,#tb-usecaselist td,#tb-buglist th,#tb-buglist td{
+	text-align: center;
+	vertical-align: middle;
+	padding: 4px;
+}
+
+#step td .btn-append.btn {
+	margin-left: 4px;
+}
+
+table input[type="checkbox"]{
+	margin:0px;
+}
+
+.zxy-content img{
+	max-width: 700px;
+}
+
+input[type="checkbox"].projectcustomer,input[type="checkbox"].customer{
+	margin-top: -2px;
+	margin-bottom: 1px;
+	vertical-align: middle;
+}

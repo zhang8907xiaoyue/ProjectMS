@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.bug.IBugDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.bug.Bug">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="storyid" jdbcType="INTEGER" property="storyid" />
+    <result column="taskid" jdbcType="INTEGER" property="taskid" />
+    <result column="usecasestepid" jdbcType="INTEGER" property="usecasestepid" />
+    <result column="project" jdbcType="INTEGER" property="project" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="severity" jdbcType="INTEGER" property="severity" />
+    <result column="assignto" jdbcType="INTEGER" property="assignto" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="step" jdbcType="VARCHAR" property="step" />
+    <result column="expect" jdbcType="VARCHAR" property="expect" />
+    <result column="duty" jdbcType="INTEGER" property="duty" />
+    <result column="finishedby" jdbcType="INTEGER" property="finishedby" />
+    <result column="result" jdbcType="INTEGER" property="result" />
+    <result column="sqlname" jdbcType="VARCHAR" property="sqlname" />
+    <result column="sql" jdbcType="VARCHAR" property="sql" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="finishedtime" jdbcType="VARCHAR" property="finishedtime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jschrj.pojo.bug.Bug">
+    <result column="content" jdbcType="LONGVARBINARY" property="content" />
+    <result column="releaseremark" jdbcType="LONGVARBINARY" property="releaseremark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, storyid, taskid, usecasestepid, project, `type`, severity, assignto, status, title, step,
+    expect, duty, finishedby, userid, username, createtime, finishedtime
+  </sql>
+  <sql id="Blob_Column_List">
+    content
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+      a.id, a.storyid, a.taskid, a.type, a.status, a.severity, a.title,a.step, a.expect, a.project, c.name projectname,
+      a.assignto, d.realname assigntoname, a.duty, e.realname dutyname, a.finishedby, f.realname finishedbyname,
+      a.result, CONVERT(a.releaseremark USING utf8) releaseremarkhtml, a.sqlname, a.sql,
+      a.username, a.createtime, a.finishedtime, a.content, CONVERT(a.content USING utf8) contenthtml,
+      a.dutycontent, CONVERT(a.dutycontent USING utf8) dutycontenthtml
+    FROM pms_bug a
+           join base_project c on(a.project = c.id)
+           left join sys_user d on(a.assignto = d.id)
+           left join sys_user e on(a.duty = e.id)
+           left join sys_user f on(a.finishedby = f.id)
+           left join sys_user g on(a.userid = g.id)
+    where a.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getBugListByStoryid" resultType="com.jschrj.pojo.bug.Bug">
+    select a.id,a.storyid,taskid,a.status,a.title,a.assignto,b.realname assigntoname,a.createtime,a.username
+    from pms_bug a,sys_user b
+    where a.status<![CDATA[<>]]>0 and a.storyid=#{storyid}
+      and a.assignto=b.id order by createtime
+  </select>
+  <select id="getBugListByTaskid" resultType="com.jschrj.pojo.bug.Bug">
+    select a.id,a.storyid,taskid,a.status,a.title,a.assignto,b.realname assigntoname,a.createtime,a.username
+    from pms_bug a,sys_user b
+    where a.status<![CDATA[<>]]>0 and a.taskid=#{taskid}
+      and a.assignto=b.id order by createtime
+  </select>
+  <select id="getBugCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    left join sys_user d on(a.assignto = d.id)
+    left join sys_user e on(a.duty = e.id)
+    left join sys_user f on(a.finishedby = f.id)
+    left join sys_user g on(a.userid = g.id)
+    WHERE a.status <![CDATA[<>]]> 0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="finishedtimeS!=null and finishedtimeS!=''">
+      and a.finishedtime <![CDATA[>=]]> #{finishedtimeS}
+    </if>
+    <if test="finishedtimeE!=null and finishedtimeE!=''">
+      and a.finishedtime <![CDATA[<=]]> #{finishedtimeE}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status}
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project}
+    </if>
+    <if test="userid!=null and userid!=''">
+      and g.name in
+      <foreach collection="userid" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and d.name in
+      <foreach collection="assignto" index="index" item="item2" open="(" separator="," close=")">
+        #{item2}
+      </foreach>
+    </if>
+    <if test="duty!=null and duty!=''">
+      and e.name in
+      <foreach collection="duty" index="index" item="item3" open="(" separator="," close=")">
+        #{item3}
+      </foreach>
+    </if>
+    <if test="finishedby!=null and finishedby!=''">
+      and f.name in
+      <foreach collection="finishedby" index="index" item="item4" open="(" separator="," close=")">
+        #{item4}
+      </foreach>
+    </if>
+  </select>
+  <select id="getBugPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, storyid, taskid, `status`, severity, title, projectname,
+    assigntoname, dutyname, finishedbyname, username, createtime, finishedtime
+    from(select
+    a.id, a.storyid, a.taskid, a.status, a.severity, a.title,c.name projectname,
+    d.realname assigntoname, e.realname dutyname, f.realname finishedbyname,
+    a.username, a.createtime, a.finishedtime
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    left join sys_user d on(a.assignto = d.id)
+    left join sys_user e on(a.duty = e.id)
+    left join sys_user f on(a.finishedby = f.id)
+    left join sys_user g on(a.userid = g.id)
+    WHERE a.status <![CDATA[<>]]> 0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="finishedtimeS!=null and finishedtimeS!=''">
+      and a.finishedtime <![CDATA[>=]]> #{finishedtimeS}
+    </if>
+    <if test="finishedtimeE!=null and finishedtimeE!=''">
+      and a.finishedtime <![CDATA[<=]]> #{finishedtimeE}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status}
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project}
+    </if>
+    <if test="userid!=null and userid!=''">
+      and g.name in
+      <foreach collection="userid" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>
+    <if test="assignto!=null and assignto!=''">
+      and d.name in
+      <foreach collection="assignto" index="index" item="item2" open="(" separator="," close=")">
+        #{item2}
+      </foreach>
+    </if>
+    <if test="duty!=null and duty!=''">
+      and e.name in
+      <foreach collection="duty" index="index" item="item3" open="(" separator="," close=")">
+        #{item3}
+      </foreach>
+    </if>
+    <if test="finishedby!=null and finishedby!=''">
+      and f.name in
+      <foreach collection="finishedby" index="index" item="item4" open="(" separator="," close=")">
+        #{item4}
+      </foreach>
+    </if>
+      ) m
+    <if test="order==null || order==''">
+      ORDER BY createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getTosolveCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    FROM pms_bug a
+           join base_project c on(a.project = c.id)
+    WHERE a.status = 1 and assignto=#{assignto}
+  </select>
+  <select id="getTosolvePage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, severity, title, projectname, username, createtime
+    from(select
+    a.id, a.severity, a.title,c.name projectname,
+    a.username, a.createtime
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    WHERE a.status = 1 and assignto=#{assignto}
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getToapproveCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    FROM pms_bug a
+           join base_project c on(a.project = c.id)
+           left join sys_user d on(a.finishedby=d.id)
+    WHERE a.status = 2
+      and a.userid=#{userid}
+  </select>
+  <select id="getToapprovePage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, severity, title, projectname, finishedbyname, finishedtime
+    from(select
+    a.id, a.severity, a.title,c.name projectname, a.finishedtime,
+    d.realname finishedbyname
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    left join sys_user d on(a.finishedby=d.id)
+    WHERE a.status = 2
+    and a.userid=#{userid}
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY finishedtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getSolvedCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    WHERE a.status in(2,3)
+    and a.finishedby=#{finishedby}
+    <if test="starttime!=null and starttime!=''">
+      and a.finishedtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.finishedtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+  </select>
+  <select id="getSolvedPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, severity, status, title, projectname, username, createtime, finishedtime
+    from(select
+    a.id, a.severity, a.status, a.title,c.name projectname, a.finishedtime,
+    a.username, a.createtime
+    FROM pms_bug a
+    join base_project c on(a.project = c.id)
+    WHERE a.status in(2,3)
+    and a.finishedby=#{finishedby}
+    <if test="starttime!=null and starttime!=''">
+      and a.finishedtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.finishedtime <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY finishedtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_bug
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.bug.Bug">
+    insert into pms_bug (id, storyid, taskid, 
+      usecasestepid, type, severity, 
+      assignto, status, title, 
+      step, expect, duty, 
+      finishedby, userid, username, 
+      createtime, updatetime, content
+      )
+    values (#{id,jdbcType=INTEGER}, #{storyid,jdbcType=INTEGER}, #{taskid,jdbcType=INTEGER}, 
+      #{usecasestepid,jdbcType=INTEGER}, #{type,jdbcType=INTEGER}, #{severity,jdbcType=INTEGER}, 
+      #{assignto,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR}, 
+      #{step,jdbcType=VARCHAR}, #{expect,jdbcType=VARCHAR}, #{duty,jdbcType=INTEGER}, 
+      #{finishedby,jdbcType=INTEGER}, #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, 
+      #{createtime,jdbcType=VARCHAR}, #{finishedtime,jdbcType=VARCHAR}, #{content,jdbcType=LONGVARBINARY}
+      )
+  </insert>
+  <insert id="insertSelective" keyProperty="id" useGeneratedKeys="true" parameterType="com.jschrj.pojo.bug.Bug">
+    insert into pms_bug
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="storyid != null">
+        storyid,
+      </if>
+      <if test="taskid != null">
+        taskid,
+      </if>
+      <if test="usecasestepid != null">
+        usecasestepid,
+      </if>
+      <if test="project != null">
+        project,
+      </if>
+      <if test="type != null">
+        `type`,
+      </if>
+      <if test="severity != null">
+        severity,
+      </if>
+      <if test="assignto != null">
+        assignto,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="step != null">
+        step,
+      </if>
+      <if test="expect != null">
+        expect,
+      </if>
+      <if test="duty != null">
+        duty,
+      </if>
+      <if test="finishedby != null">
+        finishedby,
+      </if>
+      <if test="result != null">
+        result,
+      </if>
+      <if test="releaseremark != null">
+        releaseremark,
+      </if>
+      <if test="sqlname != null">
+        sqlname,
+      </if>
+      <if test="sql != null">
+        `sql`,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="finishedtime != null">
+        finishedtime,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="storyid != null">
+        #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="taskid != null">
+        #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="usecasestepid != null">
+        #{usecasestepid,jdbcType=INTEGER},
+      </if>
+      <if test="project != null">
+        #{project,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="severity != null">
+        #{severity,jdbcType=INTEGER},
+      </if>
+      <if test="assignto != null">
+        #{assignto,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="step != null">
+        #{step,jdbcType=VARCHAR},
+      </if>
+      <if test="expect != null">
+        #{expect,jdbcType=VARCHAR},
+      </if>
+      <if test="duty != null">
+        #{duty,jdbcType=INTEGER},
+      </if>
+      <if test="finishedby != null">
+        #{finishedby,jdbcType=INTEGER},
+      </if>
+      <if test="result != null">
+        #{result,jdbcType=INTEGER},
+      </if>
+      <if test="sqlname != null">
+        #{sqlname,jdbcType=VARCHAR},
+      </if>
+      <if test="sql != null">
+        #{sql,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="finishedtime != null">
+        #{finishedtime,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="releaseremark != null">
+        #{releaseremark,jdbcType=LONGVARBINARY},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.bug.Bug">
+    update pms_bug
+    <set>
+      <if test="storyid != null">
+        storyid = #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="taskid != null">
+        taskid = #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="usecasestepid != null">
+        usecasestepid = #{usecasestepid,jdbcType=INTEGER},
+      </if>
+      <if test="project != null">
+        project = #{project,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        `type` = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="severity != null">
+        severity = #{severity,jdbcType=INTEGER},
+      </if>
+      <if test="assignto != null">
+        assignto = #{assignto,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="step != null">
+        step = #{step,jdbcType=VARCHAR},
+      </if>
+      <if test="expect != null">
+        expect = #{expect,jdbcType=VARCHAR},
+      </if>
+      <if test="duty != null">
+        duty = #{duty,jdbcType=INTEGER},
+      </if>
+      <if test="finishedby != null">
+        finishedby = #{finishedby,jdbcType=INTEGER},
+      </if>
+      <if test="result != null">
+        result = #{result,jdbcType=INTEGER},
+      </if>
+      <if test="sqlname != null">
+        sqlname = #{sqlname,jdbcType=VARCHAR},
+      </if>
+      <if test="sql != null">
+        `sql` = #{sql,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="finishedtime != null">
+        finishedtime = SYSDATE(),
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="dutycontent != null">
+        dutycontent = #{dutycontent,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="releaseremark != null">
+        releaseremark = #{releaseremark,jdbcType=LONGVARBINARY},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.jschrj.pojo.bug.Bug">
+    update pms_bug
+    set storyid = #{storyid,jdbcType=INTEGER},
+      taskid = #{taskid,jdbcType=INTEGER},
+      usecasestepid = #{usecasestepid,jdbcType=INTEGER},
+      type = #{type,jdbcType=INTEGER},
+      severity = #{severity,jdbcType=INTEGER},
+      assignto = #{assignto,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      step = #{step,jdbcType=VARCHAR},
+      expect = #{expect,jdbcType=VARCHAR},
+      duty = #{duty,jdbcType=INTEGER},
+      finishedby = #{finishedby,jdbcType=INTEGER},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      content = #{content,jdbcType=LONGVARBINARY}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.bug.Bug">
+    update pms_bug
+    set storyid = #{storyid,jdbcType=INTEGER},
+      taskid = #{taskid,jdbcType=INTEGER},
+      usecasestepid = #{usecasestepid,jdbcType=INTEGER},
+        project = #{project,jdbcType=INTEGER},
+      type = #{type,jdbcType=INTEGER},
+      severity = #{severity,jdbcType=INTEGER},
+      assignto = #{assignto,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      step = #{step,jdbcType=VARCHAR},
+      expect = #{expect,jdbcType=VARCHAR},
+      duty = #{duty,jdbcType=INTEGER},
+      finishedby = #{finishedby,jdbcType=INTEGER},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

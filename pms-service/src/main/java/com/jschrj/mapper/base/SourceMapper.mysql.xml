@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.base.ISourceDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.base.Source">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="STATUS" jdbcType="INTEGER" property="status" />
+    <result column="LISTID" jdbcType="INTEGER" property="listid" />
+    <result column="CREATETIME" jdbcType="VARCHAR" property="createtime" />
+    <result column="UPDATETIME" jdbcType="VARCHAR" property="updatetime" />
+    <result column="USERID" jdbcType="INTEGER" property="userid" />
+    <result column="USERNAME" jdbcType="VARCHAR" property="username" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, STATUS, LISTID, CREATETIME, UPDATETIME, USERID, USERNAME
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from base_source
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getSourceList" resultType="com.jschrj.pojo.base.Source">
+    select
+    id,name
+    from base_source
+    where status=1 order by listid
+  </select>
+  <select id="getSourceCounts" parameterType="map" resultType="int">
+    select count(id)
+    from base_source
+    where 1=1
+    <if test="status==0 or status==1">
+      and status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+      and name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="order==null || order==''">
+      ORDER BY listid
+    </if>
+  </select>
+  <select id="getSourcePage" parameterType="map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from base_source
+    where 1=1
+    <if test="status==0 or status==1">
+      and status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+      and name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="order==null || order==''">
+      ORDER BY listid
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from base_source
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.base.Source">
+    insert into base_source (ID, NAME, STATUS, 
+      LISTID, CREATETIME, UPDATETIME, 
+      USERID, USERNAME)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
+      #{listid,jdbcType=INTEGER}, #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR},
+      #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.base.Source">
+    insert into base_source
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="listid != null">
+        LISTID,
+      </if>
+      CREATETIME,
+      <if test="updatetime != null">
+        UPDATETIME,
+      </if>
+      <if test="userid != null">
+        USERID,
+      </if>
+      <if test="username != null">
+        USERNAME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        #{listid,jdbcType=INTEGER},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.base.Source">
+    update base_source
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        LISTID = #{listid,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null">
+        CREATETIME = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      UPDATETIME = SYSDATE(),
+      <if test="userid != null">
+        USERID = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        USERNAME = #{username,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.base.Source">
+    update base_source
+    set NAME = #{name,jdbcType=VARCHAR},
+      STATUS = #{status,jdbcType=INTEGER},
+      LISTID = #{listid,jdbcType=INTEGER},
+      CREATETIME = #{createtime,jdbcType=TIMESTAMP},
+      UPDATETIME = #{updatetime,jdbcType=TIMESTAMP},
+      USERID = #{userid,jdbcType=INTEGER},
+      USERNAME = #{username,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

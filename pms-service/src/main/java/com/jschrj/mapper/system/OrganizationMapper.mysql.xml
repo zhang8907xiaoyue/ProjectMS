@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.system.IOrganizationDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.system.Organization">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="STATUS" jdbcType="INTEGER" property="status" />
+    <result column="CJ" jdbcType="INTEGER" property="cj" />
+    <result column="XZQHDM" jdbcType="VARCHAR" property="xzqhdm" />
+    <result column="TEL" jdbcType="VARCHAR" property="tel" />
+    <result column="PARENTID" jdbcType="INTEGER" property="parentid" />
+    <result column="LISTID" jdbcType="INTEGER" property="listid" />
+    <result column="CREATETIME" jdbcType="VARCHAR" property="createtime" />
+    <result column="UPDATETIME" jdbcType="VARCHAR" property="updatetime" />
+    <result column="USERID" jdbcType="INTEGER" property="userid" />
+    <result column="USERNAME" jdbcType="VARCHAR" property="username" />
+    <result column="REMARK" jdbcType="VARCHAR" property="remark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, NAME, TYPE, STATUS, CJ, XZQHDM, TEL, PARENTID, LISTID, CREATETIME, UPDATETIME, 
+    USERID, USERNAME, REMARK
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+     a.id, a.NAME, a.TYPE, a.STATUS, a.CJ, a.XZQHDM, a.TEL, a.PARENTID, b.name parentname, a.LISTID, a.CREATETIME, a.UPDATETIME, 
+    a.USERID, a.USERNAME, a.REMARK
+    from sys_organization a left join sys_organization b
+    on(a.parentid=b.id)
+    where a.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getOrgList" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_organization
+    where status=1 order by listid
+  </select>
+  <select id="getOrgByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_organization
+    where name = #{name,jdbcType=VARCHAR}
+  </select>
+  <select id="getOrgByNameExceptId" parameterType="map" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_organization
+    where name = #{name}
+    and id<![CDATA[<>]]>#{id}
+  </select>
+  <select id="getOrgCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from sys_organization a 
+    where 1=1
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="parentid!=-1">
+    	and a.parentid=#{parentid,jdbcType=INTEGER}
+    </if>
+  </select>
+  <select id="getOrgPage" parameterType="map" resultMap="BaseResultMap">
+    select 
+    a.id, a.NAME, a.TYPE, a.STATUS, a.CJ, a.XZQHDM, a.TEL, a.PARENTID, a.LISTID, a.CREATETIME, a.UPDATETIME, 
+    a.USERID, a.USERNAME, a.REMARK
+    from sys_organization a 
+    where 1=1
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="parentid!=-1">
+    	and a.parentid=#{parentid,jdbcType=INTEGER}
+    </if>
+    <if test="order==null || order==''">
+    	ORDER BY a.listid
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+    	ORDER BY a.${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getOrgTree" parameterType="map" resultType="com.jschrj.common.TreeHelper">
+    select 
+    id,name,parentid pId
+    from sys_organization
+    <if test="rootid!=null and rootid!=''">
+    	where FIND_IN_SET(id, func_getOrgChildList(#{rootid,jdbcType=INTEGER}))
+    </if>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_organization
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.system.Organization">
+    insert into sys_organization (id, NAME, TYPE, 
+      STATUS, CJ, XZQHDM, 
+      TEL, PARENTID, LISTID, 
+      CREATETIME, UPDATETIME, USERID, 
+      USERNAME, REMARK)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
+      #{status,jdbcType=INTEGER}, #{cj,jdbcType=INTEGER}, #{xzqhdm,jdbcType=VARCHAR}, 
+      #{tel,jdbcType=VARCHAR}, #{parentid,jdbcType=INTEGER}, #{listid,jdbcType=INTEGER}, 
+      #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER}, 
+      #{username,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.system.Organization">
+    insert into sys_organization
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="cj != null">
+        CJ,
+      </if>
+      <if test="xzqhdm != null">
+        XZQHDM,
+      </if>
+      <if test="tel != null">
+        TEL,
+      </if>
+      <if test="parentid != null">
+        PARENTID,
+      </if>
+      <if test="listid != null">
+        LISTID,
+      </if>
+      CREATETIME,
+      <if test="updatetime != null">
+        UPDATETIME,
+      </if>
+      <if test="userid != null">
+        USERID,
+      </if>
+      <if test="username != null">
+        USERNAME,
+      </if>
+      <if test="remark != null">
+        REMARK,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="cj != null">
+        #{cj,jdbcType=INTEGER},
+      </if>
+      <if test="xzqhdm != null">
+        #{xzqhdm,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        #{listid,jdbcType=INTEGER},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.system.Organization">
+    update sys_organization
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="cj != null">
+        CJ = #{cj,jdbcType=INTEGER},
+      </if>
+      <if test="xzqhdm != null">
+        XZQHDM = #{xzqhdm,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        TEL = #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        PARENTID = #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        LISTID = #{listid,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null">
+        CREATETIME = #{createtime,jdbcType=VARCHAR},
+      </if>
+      UPDATETIME = SYSDATE(),
+      <if test="userid != null">
+        USERID = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        USERNAME = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        REMARK = #{remark,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.system.Organization">
+    update sys_organization
+    set NAME = #{name,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      STATUS = #{status,jdbcType=INTEGER},
+      CJ = #{cj,jdbcType=INTEGER},
+      XZQHDM = #{xzqhdm,jdbcType=VARCHAR},
+      TEL = #{tel,jdbcType=VARCHAR},
+      PARENTID = #{parentid,jdbcType=INTEGER},
+      LISTID = #{listid,jdbcType=INTEGER},
+      CREATETIME = #{createtime,jdbcType=VARCHAR},
+      UPDATETIME = #{updatetime,jdbcType=VARCHAR},
+      USERID = #{userid,jdbcType=INTEGER},
+      USERNAME = #{username,jdbcType=VARCHAR},
+      REMARK = #{remark,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

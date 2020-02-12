@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.system.IApplicationDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.system.Application">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="STATUS" jdbcType="INTEGER" property="status" />
+    <result column="URL" jdbcType="VARCHAR" property="url" />
+    <result column="CSS" jdbcType="VARCHAR" property="css" />
+    <result column="ICON" jdbcType="VARCHAR" property="icon" />
+    <result column="PARENTID" jdbcType="INTEGER" property="parentid" />
+    <result column="LISTID" jdbcType="INTEGER" property="listid" />
+  </resultMap>
+  <resultMap id="AppResultMap" type="com.jschrj.pojo.system.Application">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="STATUS" jdbcType="INTEGER" property="status" />
+    <result column="URL" jdbcType="VARCHAR" property="url" />
+    <result column="CSS" jdbcType="VARCHAR" property="css" />
+    <result column="ICON" jdbcType="VARCHAR" property="icon" />
+    <result column="PARENTID" jdbcType="INTEGER" property="parentid" />
+    <result column="LISTID" jdbcType="INTEGER" property="listid" />
+    <collection property="children" ofType="com.jschrj.pojo.system.Application"
+    	 column="ID" select="selectChildrenByPrimaryKey">
+    </collection>
+  </resultMap>
+  <resultMap id="leftMenuTreeResultMap" type="com.jschrj.common.TreeHelper">
+    <result column="ID" jdbcType="DECIMAL" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="text" />
+    <result column="URL" jdbcType="VARCHAR" property="url" />
+    <result column="ICON" jdbcType="VARCHAR" property="iconCls" />
+    <result column="YHJSS" jdbcType="VARCHAR" property="ext1" />
+    <association property="attributes" 
+    	 column="ID" select="selectAttributeByPrimaryKey">
+         <result property="type" column="type"/>
+         <result property="url" column="url"/>
+         <result property="css" column="css"/>
+    </association>
+    <collection property="children" ofType="com.jschrj.common.TreeHelper"
+    	 column="{id=id,userid=userid}" select="getLeftMenuTreeChildrenList">
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, TYPE, STATUS, URL, CSS, ICON, PARENTID, LISTID
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    a.ID, a.NAME, a.TYPE, a.STATUS, a.URL, a.CSS, a.ICON, a.PARENTID, b.name parentname, a.LISTID
+    from sys_application a left join sys_application b
+    on(a.parentid=b.id)
+    where a.ID = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectChildrenByPrimaryKey" parameterType="java.lang.Integer" resultMap="AppResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_application
+    where PARENTID = #{id,jdbcType=INTEGER}
+    
+  </select>
+  <select id="getApplicationCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from sys_application a left join sys_application b
+    on(a.parentid=b.id)
+    where 1=1
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="parentid!=-1">
+    	and a.parentid=#{parentid,jdbcType=INTEGER}
+    </if>
+  </select>
+  <select id="getApplicationPage" parameterType="map" resultMap="BaseResultMap">
+    select 
+    a.ID, a.NAME, a.TYPE, a.STATUS, a.URL, a.CSS, a.ICON, a.PARENTID, b.name parentname, a.LISTID
+    from sys_application a left join sys_application b
+    on(a.parentid=b.id)
+    where 1=1
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="parentid!=-1">
+    	and a.parentid=#{parentid,jdbcType=INTEGER}
+    </if>
+    <if test="order==null || order==''">
+    	ORDER BY a.PARENTID,a.listid
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+    	ORDER BY a.${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getApplicationTree" parameterType="map" resultType="com.jschrj.common.TreeHelper">
+    select 
+    id,name,parentid pId
+    from sys_application
+  </select>
+  <select id="getAppList" resultMap="AppResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_application
+    where status=1 
+    and parentid in(-1,-2,-3,-4,-5)
+    order by listid
+  </select>
+  <select id="getLeftMenuTree" parameterType="map" resultMap="leftMenuTreeResultMap">
+    select distinct
+    A.ID,A.NAME,A.TYPE,A.URL,A.CSS,A.ICON,A.PARENTID,A.LISTID,'${userid}' USERID
+    from SYS_APPLICATION A,SYS_USERROLE B,SYS_ROLEPOWER C,SYS_ROLE D
+    WHERE B.USERID =${userid} AND B.ROLEID=C.ROLEID
+    AND A.ID=C.APPID AND B.ROLEID=D.ID AND D.STATUS=1
+    AND A.PARENTID=#{parentid}
+    AND A.STATUS=1
+    order by listid
+  </select>
+  <select id="getLeftMenuTreeChildrenList" parameterType="map" resultMap="leftMenuTreeResultMap">
+    select distinct
+    A.ID,A.NAME,A.TYPE,A.URL,A.CSS,A.ICON,A.PARENTID,A.LISTID,'${userid}' USERID
+    from SYS_APPLICATION A,SYS_USERROLE B,SYS_ROLEPOWER C,SYS_ROLE D
+    WHERE B.USERID =${userid} AND B.ROLEID=C.ROLEID
+    AND A.ID=C.APPID AND B.ROLEID=D.ID AND D.STATUS=1
+    AND A.PARENTID=#{id,jdbcType=DECIMAL}
+    AND A.STATUS=1
+    order by listid
+  </select>
+  <select id="selectAttributeByPrimaryKey" parameterType="java.lang.Integer" resultType="com.jschrj.pojo.system.Application">
+    select 
+    type,url
+    from SYS_APPLICATION
+    where ID = #{id}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_application
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.system.Application">
+    insert into sys_application (ID, NAME, TYPE, 
+      STATUS, URL, CSS, ICON, 
+      PARENTID, LISTID)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
+      #{status,jdbcType=INTEGER}, #{url,jdbcType=VARCHAR}, #{css,jdbcType=VARCHAR}, #{icon,jdbcType=VARCHAR}, 
+      #{parentid,jdbcType=INTEGER}, #{listid,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.system.Application">
+    insert into sys_application
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="url != null">
+        URL,
+      </if>
+      <if test="css != null">
+        CSS,
+      </if>
+      <if test="icon != null">
+        ICON,
+      </if>
+      <if test="parentid != null">
+        PARENTID,
+      </if>
+      <if test="listid != null">
+        LISTID,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="url != null">
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="css != null">
+        #{css,jdbcType=VARCHAR},
+      </if>
+      <if test="icon != null">
+        #{icon,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        #{listid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.system.Application">
+    update sys_application
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="url != null">
+        URL = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="css != null">
+        CSS = #{css,jdbcType=VARCHAR},
+      </if>
+      <if test="icon != null">
+        ICON = #{icon,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        PARENTID = #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="listid != null">
+        LISTID = #{listid,jdbcType=INTEGER},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.system.Application">
+    update sys_application
+    set NAME = #{name,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      STATUS = #{status,jdbcType=INTEGER},
+      URL = #{url,jdbcType=VARCHAR},
+      CSS = #{css,jdbcType=VARCHAR},
+      ICON = #{icon,jdbcType=VARCHAR},
+      PARENTID = #{parentid,jdbcType=INTEGER},
+      LISTID = #{listid,jdbcType=INTEGER}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

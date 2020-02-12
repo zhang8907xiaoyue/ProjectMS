@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.report.IReportDao">
+
+  <select id="getStoryreportCounts" parameterType="map" resultType="int">
+    select count(m.v1)
+    from(select
+    a.id v1, case when a.status=1 then "待分拣"
+    when a.status=2 then "待开发"
+    when a.status=3 then "待测试"
+    when a.status=4 then "待发布"
+    when a.status=5 then "已完成" end v2,
+    "需求" v3, c.name v4,a.title v5,
+    group_concat(d.realname) v6, a.openeddate v7, a.deadline v9, a.finishdate v10
+    from pms_story a
+    left join pms_task b on(a.id=b.storyid)
+    join base_source c on(a.source=c.id)
+    join sys_user d on(b.assignto=d.id)
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.openeddate <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.openeddate <![CDATA[<=]]> #{endtime}
+    </if>
+    group by a.id
+    union all
+    select
+    a.id v1, case when a.status=1 then "待解决"
+    when a.status=2 then "待审核"
+    when a.status=3 then "待发布"
+    when a.status=4 then "已完成" end v2,
+    "bug" v3, a.username v4,a.title v5,
+    group_concat(d.realname) v6, a.createtime v7, '' v9, a.finishedtime v10
+    from pms_bug a
+    left join pms_task b on(a.id=b.storyid)
+    join sys_user d on(b.assignto=d.id)
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    group by a.id
+    ) m
+  </select>
+  <select id="getStoryreportPage" parameterType="map" resultType="com.jschrj.pojo.report.Report">
+    select
+    v1, v2, v3, v4, v5, v6, v7, v8, v9
+    from(select
+    a.id v1, case when a.status=1 then "待分拣"
+    when a.status=2 then "待开发"
+    when a.status=3 then "待测试"
+    when a.status=4 then "待发布"
+    when a.status=5 then "已完成" end v2,
+    "需求" v3, c.name v4,a.title v5,
+    group_concat(d.realname) v6, a.openeddate v7, a.deadline v8, a.finishdate v9
+    from pms_story a
+    left join pms_task b on(a.id=b.storyid)
+    join base_source c on(a.source=c.id)
+    join sys_user d on(b.assignto=d.id)
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.openeddate <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.openeddate <![CDATA[<=]]> #{endtime}
+    </if>
+    group by a.id
+    union all
+    select
+    a.id v1, case when a.status=1 then "待解决"
+    when a.status=2 then "待审核"
+    when a.status=3 then "待发布"
+    when a.status=4 then "已完成" end v2,
+    "bug" v3, a.username v4,a.title v5,
+    group_concat(d.realname) v6, a.createtime v7, '' v8, a.finishedtime v9
+    from pms_bug a
+    left join pms_task b on(a.id=b.storyid)
+    join sys_user d on(b.assignto=d.id)
+    where a.status<![CDATA[<>]]>0
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+    group by a.id
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY m.v7 desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+    <select id="getStoryreportList" parameterType="map" resultType="com.jschrj.pojo.report.Report">
+        select
+        v1, v2, v3, v4, v5, v6, v7, v8, v9
+        from(select
+        a.id v1, case when a.status=1 then "待分拣"
+        when a.status=2 then "待开发"
+        when a.status=3 then "待测试"
+        when a.status=4 then "待发布"
+        when a.status=5 then "已完成" end v2,
+        "需求" v3, c.name v4,a.title v5,
+        group_concat(d.realname) v6, a.openeddate v7, a.deadline v8, a.finishdate v9
+        from pms_story a
+        left join pms_task b on(a.id=b.storyid)
+        join base_source c on(a.source=c.id)
+        join sys_user d on(b.assignto=d.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.openeddate <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.openeddate <![CDATA[<=]]> #{endtime}
+        </if>
+        group by a.id
+        union all
+        select
+        a.id v1, case when a.status=1 then "待解决"
+        when a.status=2 then "待审核"
+        when a.status=3 then "待发布"
+        when a.status=4 then "已完成" end v2,
+        "bug" v3, a.username v4,a.title v5,
+        group_concat(d.realname) v6, a.createtime v7, '' v8, a.finishedtime v9
+        from pms_bug a
+        left join pms_task b on(a.id=b.storyid)
+        join sys_user d on(b.assignto=d.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        group by a.id
+        ) m
+        <if test="order==null || order==''">
+            ORDER BY m.v7 desc
+        </if>
+        <if test="order!=null and order!='' and sort!=null and sort!=''">
+            ORDER BY ${order} ${sort}
+        </if>
+    </select>
+
+    <select id="getWeekly2Counts" parameterType="map" resultType="int">
+        select count(m.v1)
+        from(select
+        b.realname v1, a.title v2, a.createtime v3,
+        case when d.createtime is null then a.deadline else d.createtime end v4,
+        c.realname v5,
+        case a.status when 1 then "开发中"
+        when 2 then "开发完成" end v6, a.id v7
+        from pms_task a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        left join pms_taskcomplete d on(d.taskid=a.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        union all
+        select
+        b.realname v1, a.title v2, a.createtime v3,
+        a.finishedtime v4,
+        c.realname v5,
+        case when a.status=1 then "待解决"
+        when a.status=2 then "待审核"
+        when a.status=3 then "待发布"
+        when a.status=4 then "已完成" end v6, a.id v7
+        from pms_bug a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        ) m
+    </select>
+    <select id="getWeekly2Page" parameterType="map" resultType="com.jschrj.pojo.report.Report">
+        select
+        v1, v2, v3, v4, v5, v6, v7
+        from(select
+        b.realname v1, a.title v2, a.createtime v3,
+        case when d.createtime is null then a.deadline else d.createtime end v4,
+        c.realname v5,
+        case a.status when 1 then "开发中"
+        when 2 then "开发完成" end v6, a.id v7
+        from pms_task a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        left join pms_taskcomplete d on(d.taskid=a.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        union all
+        select
+        b.realname v1, a.title v2, a.createtime v3,
+        a.finishedtime v4,
+        c.realname v5,
+        case when a.status=1 then "待解决"
+        when a.status=2 then "待审核"
+        when a.status=3 then "待发布"
+        when a.status=4 then "已完成" end v6, a.id v7
+        from pms_bug a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        ) m
+        <if test="order==null || order==''">
+            ORDER BY m.v1,m.v3 desc
+        </if>
+        <if test="order!=null and order!='' and sort!=null and sort!=''">
+            ORDER BY ${order} ${sort}
+        </if>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="getWeekly2List" parameterType="map" resultType="com.jschrj.pojo.report.Report">
+        select
+        v1, v2, v3, v4, v5, v6, v7
+        from(select
+        b.realname v1, a.title v2, a.createtime v3,
+        case when d.createtime is null then a.deadline else d.createtime end v4,
+        c.realname v5,
+        case a.status when 1 then "开发中"
+        when 2 then "开发完成" end v6, a.id v7
+        from pms_task a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        left join pms_taskcomplete d on(d.taskid=a.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        union all
+        select
+        b.realname v1, a.title v2, a.createtime v3,
+        a.finishedtime v4,
+        c.realname v5,
+        case when a.status=1 then "待解决"
+        when a.status=2 then "待审核"
+        when a.status=3 then "待发布"
+        when a.status=4 then "已完成" end v6, a.id v7
+        from pms_bug a
+        join sys_user b on(a.assignto=b.id)
+        join sys_user c on(a.userid=c.id)
+        where a.status<![CDATA[<>]]>0
+        <if test="starttime!=null and starttime!=''">
+            and a.createtime <![CDATA[>=]]> #{starttime}
+        </if>
+        <if test="endtime!=null and endtime!=''">
+            and a.createtime <![CDATA[<=]]> #{endtime}
+        </if>
+        ) m
+        <if test="order==null || order==''">
+            ORDER BY m.v1,m.v3 desc
+        </if>
+        <if test="order!=null and order!='' and sort!=null and sort!=''">
+            ORDER BY ${order} ${sort}
+        </if>
+    </select>
+
+    <select id="getToBeSortedList" resultType="com.jschrj.pojo.report.Report">
+
+        select
+        c.name v1, b.name v2, a.title v3, a.openeddate v4, a.deadline v5
+        from pms_story a
+        join base_source b on(a.source=b.id)
+        join base_project c on(a.project=c.id)
+        where a.status = 1
+        order by v1,v2,v4
+
+    </select>
+
+    <select id="getToDevelopedList" resultType="com.jschrj.pojo.report.Report">
+
+        select
+            c.name v1, b.name v2, d.title v3, e.realname v4,
+               d.createtime v5, d.deadline v6
+        from pms_story a
+                 join base_source b on(a.source=b.id)
+                 join base_project c on(a.project=c.id)
+                 join pms_task d on(a.id=d.storyid and d.status=1)
+                 join sys_user e on(d.assignto=e.id)
+        where a.status = 2
+        order by v1,v2,v5
+
+    </select>
+
+    <select id="getBugList" resultType="com.jschrj.pojo.report.Report">
+
+        select
+            b.name v1, a.title v2, c.realname v3, a.createtime v4
+        from pms_bug a
+                 join base_project b on(a.project=b.id)
+                 join sys_user c on(a.assignto=c.id)
+        where a.status = 1
+        order by v1,v4
+
+    </select>
+
+</mapper>

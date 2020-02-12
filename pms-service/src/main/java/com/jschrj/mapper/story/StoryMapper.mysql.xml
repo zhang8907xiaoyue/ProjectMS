@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.story.IStoryDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.story.Story">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="project" jdbcType="INTEGER" property="project" />
+    <result column="source" jdbcType="INTEGER" property="source" />
+    <result column="modular" jdbcType="INTEGER" property="modular" />
+    <result column="pri" jdbcType="INTEGER" property="pri" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="deadline" jdbcType="VARCHAR" property="deadline" />
+    <result column="filename" jdbcType="VARCHAR" property="filename" />
+    <result column="fileurl" jdbcType="VARCHAR" property="fileurl" />
+    <result column="openedby" jdbcType="INTEGER" property="openedby" />
+    <result column="openedbyname" jdbcType="VARCHAR" property="openedbyname" />
+    <result column="openeddate" jdbcType="VARCHAR" property="openeddate" />
+    <result column="finishdate" jdbcType="VARCHAR" property="finishdate" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jschrj.pojo.story.Story">
+    <result column="content" jdbcType="LONGVARBINARY" property="content" />
+    <result column="target" jdbcType="LONGVARBINARY" property="target" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, project, source, modular, pri, title, status, content, deadline, filename, fileurl, openedby, openeddate, finishdate
+  </sql>
+  <sql id="Blob_Column_List">
+    content,target
+  </sql>
+  <select id="getStoryCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_story a,base_project b,base_source c,sys_user d
+    where a.status<![CDATA[<>]]>0 and a.project=b.id
+    and a.source=c.id and a.openedby=d.id
+    <if test="starttime!=null and starttime!=''">
+      and a.openeddate <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.openeddate <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="source!=null and source!=''">
+      and a.source=#{source,jdbcType=VARCHAR}
+    </if>
+    <if test="openedby!=null and openedby!=''">
+      and d.name in
+      <foreach collection="openedby" index="index" item="item1" open="(" separator=","  close=")" >
+        #{item1}
+      </foreach>
+    </if>
+  </select>
+  <select id="getStoryPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, project,projectname,modularname, source,sourcename, pri, title, `status`, content, deadline,
+    openedbyname, openeddate, finishdate
+    from(select
+    a.id, a.project,b.`name` projectname,e.`name` modularname, a.source,c.`name` sourcename, a.pri, a.title, a.`status`, a.content, a.deadline,
+    d.realname openedbyname, a.openeddate, a.finishdate
+    from pms_story a,base_project b,base_source c,sys_user d,base_modular e
+    where  a.status<![CDATA[<>]]>0 and a.project=b.id
+    and a.source=c.id and a.openedby=d.id and a.modular=e.id
+    <if test="starttime!=null and starttime!=''">
+      and a.openeddate <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.openeddate <![CDATA[<=]]> #{endtime}
+    </if>
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="source!=null and source!=''">
+      and a.source=#{source,jdbcType=VARCHAR}
+    </if>
+    <if test="openedby!=null and openedby!=''">
+      and d.name in
+      <foreach collection="openedby" index="index" item="item1" open="(" separator="," close=")">
+        #{item1}
+      </foreach>
+    </if>) m
+    <if test="order==null || order==''">
+      ORDER BY openeddate desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getTotestCounts" parameterType="map" resultType="int">
+    select count(1)
+    from(select distinct
+    a.id, a.project,b.`name` projectname,e.`name` modularname, a.source,c.`name` sourcename, a.pri, a.title, a.`status`, a.content, a.deadline,
+    d.realname openedbyname, a.openeddate, a.finishdate
+    from pms_story a,base_project b,base_source c,sys_user d,base_modular e,pms_task f
+    where  a.status<![CDATA[<>]]>0 and a.project=b.id
+    and a.source=c.id and a.openedby=d.id and a.modular=e.id
+    and a.status in(2,3) and a.id=f.storyid and f.status=2
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="status!=null and status!=''">
+      and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="source!=null and source!=''">
+      and a.source=#{source,jdbcType=VARCHAR}
+    </if>
+    ) m
+  </select>
+  <select id="getTotestPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, project,projectname,modularname, source,sourcename, pri, title, `status`, content, deadline,
+    openedbyname, openeddate, finishdate
+    from(select distinct
+    a.id, a.project,b.`name` projectname,e.`name` modularname, a.source,c.`name` sourcename, a.pri, a.title, a.`status`, a.content, a.deadline,
+    d.realname openedbyname, a.openeddate, a.finishdate
+    from pms_story a,base_project b,base_source c,sys_user d,base_modular e,pms_task f
+    where  a.status<![CDATA[<>]]>0 and a.project=b.id
+    and a.source=c.id and a.openedby=d.id and a.modular=e.id
+    and a.status in(2,3) and a.id=f.storyid and f.status=2
+    <if test="id!=null and id!=''">
+      and a.id=#{id,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="project!=null and project!=''">
+      and a.project=#{project,jdbcType=VARCHAR}
+    </if>
+    <if test="source!=null and source!=''">
+      and a.source=#{source,jdbcType=VARCHAR}
+    </if>
+    ) m
+    <if test="order==null || order==''">
+      ORDER BY openeddate desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="selectIsTaskComplete" parameterType="map" resultType="int">
+    select
+      count(a.id) result
+    from pms_story a
+    where a.id = #{storyid,jdbcType=INTEGER}
+      and exists(select * from pms_task c where a.id=c.storyid and c.id<![CDATA[<>]]>#{taskid} and c.status=1)
+  </select>
+  <select id="selectExistsOtherTask" parameterType="map" resultType="int">
+    select
+      count(a.id) result
+    from pms_story a
+    where a.id = #{storyid,jdbcType=INTEGER}
+      and exists(select * from pms_task c where a.id=c.storyid and c.id<![CDATA[>=]]>#{taskid})
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+      id, project,projectname, source,sourcename,modular,modularname, pri, title, `status`, content,contenthtml, target,targethtml, deadline,
+      openedbyname, openeddate, filename, fileurl, finishdate
+    from(select
+           a.id, a.project,b.`name` projectname, a.source,c.`name` sourcename,a.modular, e.name modularname, a.pri, a.title, a.`status`, a.content,CONVERT(content USING utf8) contenthtml, a.target,CONVERT(target USING utf8) targethtml, a.deadline,
+           d.realname openedbyname, a.openeddate, a.filename, a.fileurl, a.finishdate
+         from pms_story a,base_project b,base_source c,sys_user d,base_modular e
+         where  a.project=b.id
+           and a.source=c.id and a.openedby=d.id and a.modular=e.id
+           and a.id = #{id,jdbcType=INTEGER}) m
+  </select>
+  <select id="getProjectSum" resultType="com.jschrj.pojo.base.KeyAndValue"
+          parameterType="map">
+    SELECT b.name,count(a.id) value
+    from pms_story a,base_project b
+    where a.project=b.ID
+    and a.status<![CDATA[<>]]>0
+    and a.openeddate <![CDATA[>=]]> #{dateFr}
+      and a.openeddate <![CDATA[<=]]> #{dateTo}
+    group by b.name
+  </select>
+  <select id="getSourceSum" resultType="com.jschrj.pojo.base.KeyAndValue"
+          parameterType="map">
+    select x.name,case when p.ext1 is null then 0 else p.ext1 end ext1,
+    case when t.ext2 is null then 0 else t.ext2 end ext2
+    from base_source x
+    left join
+    (SELECT b.name,count(a.id) ext1
+    from pms_story a,base_source b
+    where a.source=b.ID
+    and a.status<![CDATA[<>]]>0 and a.status<![CDATA[<>]]>5
+      and a.openeddate <![CDATA[>=]]> #{dateFr}
+      and a.openeddate <![CDATA[<=]]> #{dateTo}
+    group by b.name) p on(x.name=p.name)
+    left join
+    (SELECT b.name,count(a.id) ext2
+    from pms_story a,base_source b
+    where a.source=b.ID
+    and a.status=5
+      and a.openeddate <![CDATA[>=]]> #{dateFr}
+      and a.openeddate <![CDATA[<=]]> #{dateTo}
+    group by b.name) t on(x.name=t.name)
+    order by x.listid
+  </select>
+  <select id="getGkCounts" resultType="com.jschrj.pojo.base.KeyAndValue"
+          parameterType="map">
+    SELECT a.ext1,b.ext2,c.ext3,d.ext4
+    from
+      (select count(1) ext1
+       from pms_task a
+       where a.status in (1,3)
+         and a.assignto=#{userid}
+         and exists(select id from pms_story x where x.id=a.storyid and x.status<![CDATA[<>]]>0)) a,
+      (select count(1) ext2
+       from pms_bug
+       where status=1
+         and assignto=#{userid}) b,
+      (select count(1) ext3
+       from
+       (select distinct x.id
+       from pms_story x,pms_task y
+       where x.status in(2,3)
+             and x.id=y.storyid and y.status=2) m) c,
+      (select count(1) ext4
+       from pms_story
+       where status=4) d
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_story
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.story.Story">
+    insert into pms_story (id, project, source, 
+      pri, title, status, 
+      content, deadline, fileid, 
+      openedby, openeddate, contenthtml
+      )
+    values (#{id,jdbcType=INTEGER}, #{project,jdbcType=INTEGER}, #{source,jdbcType=INTEGER}, 
+      #{pri,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
+      #{content,jdbcType=VARCHAR}, #{deadline,jdbcType=DATE}, #{fileid,jdbcType=INTEGER}, 
+      #{openedby,jdbcType=INTEGER}, #{openeddate,jdbcType=TIMESTAMP}, #{contenthtml,jdbcType=LONGVARBINARY}
+      )
+  </insert>
+  <insert id="insertSelective" keyProperty="id" useGeneratedKeys="true" parameterType="com.jschrj.pojo.story.Story">
+    insert into pms_story
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="project != null">
+        project,
+      </if>
+      <if test="source != null">
+        source,
+      </if>
+      <if test="modular != null">
+        modular,
+      </if>
+      <if test="pri != null">
+        pri,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="deadline != null and deadline!=''">
+        deadline,
+      </if>
+      <if test="filename != null">
+        filename,
+      </if>
+      <if test="fileurl != null">
+        fileurl,
+      </if>
+      <if test="openedby != null">
+        openedby,
+      </if>
+      <if test="openedbyname != null">
+        openedbyname,
+      </if>
+      openeddate,
+      <if test="content != null">
+        content,
+      </if>
+      <if test="target != null">
+        target,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="project != null">
+        #{project,jdbcType=INTEGER},
+      </if>
+      <if test="source != null">
+        #{source,jdbcType=INTEGER},
+      </if>
+      <if test="modular != null">
+        #{modular,jdbcType=INTEGER},
+      </if>
+      <if test="pri != null">
+        #{pri,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="deadline != null and deadline!=''">
+        #{deadline,jdbcType=VARCHAR},
+      </if>
+      <if test="filename != null">
+        #{filename,jdbcType=VARCHAR},
+      </if>
+      <if test="fileurl != null">
+        #{fileurl,jdbcType=VARCHAR},
+      </if>
+      <if test="openedby != null">
+        #{openedby,jdbcType=INTEGER},
+      </if>
+      <if test="openedbyname != null">
+        #{openedbyname,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="content != null">
+        #{content,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="target != null">
+        #{target,jdbcType=LONGVARBINARY},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.story.Story">
+    update pms_story
+    <set>
+      <if test="project != null">
+        project = #{project,jdbcType=INTEGER},
+      </if>
+      <if test="source != null">
+        source = #{source,jdbcType=INTEGER},
+      </if>
+      <if test="modular != null">
+        modular = #{modular,jdbcType=INTEGER},
+      </if>
+      <if test="pri != null">
+        pri = #{pri,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="deadline != null and deadline!=''">
+        deadline = #{deadline,jdbcType=VARCHAR},
+      </if>
+      <if test="filename != null">
+        filename = #{filename,jdbcType=VARCHAR},
+      </if>
+      <if test="fileurl != null">
+        fileurl = #{fileurl,jdbcType=VARCHAR},
+      </if>
+      <if test="openedby != null">
+        openedby = #{openedby,jdbcType=INTEGER},
+      </if>
+      <if test="openeddate != null">
+        openeddate = #{openeddate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="finishdate != null">
+        finishdate = SYSDATE(),
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="target != null">
+        target = #{target,jdbcType=LONGVARBINARY},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.jschrj.pojo.story.Story">
+    update pms_story
+    set project = #{project,jdbcType=INTEGER},
+      source = #{source,jdbcType=INTEGER},
+      pri = #{pri,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      content = #{content,jdbcType=VARCHAR},
+      deadline = #{deadline,jdbcType=VARCHAR},
+        filename = #{filename,jdbcType=VARCHAR},
+        fileurl = #{fileurl,jdbcType=VARCHAR},
+      openedby = #{openedby,jdbcType=INTEGER},
+      openeddate = #{openeddate,jdbcType=VARCHAR},
+      contenthtml = #{contenthtml,jdbcType=LONGVARBINARY}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.story.Story">
+    update pms_story
+    set project = #{project,jdbcType=INTEGER},
+      source = #{source,jdbcType=INTEGER},
+      pri = #{pri,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      content = #{content,jdbcType=VARCHAR},
+      deadline = #{deadline,jdbcType=VARCHAR},
+        filename = #{filename,jdbcType=VARCHAR},
+        fileurl = #{fileurl,jdbcType=VARCHAR},
+      openedby = #{openedby,jdbcType=VARCHAR},
+      openeddate = #{openeddate,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

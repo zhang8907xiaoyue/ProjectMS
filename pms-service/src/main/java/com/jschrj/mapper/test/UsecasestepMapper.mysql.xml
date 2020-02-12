@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.test.IUsecasestepDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.test.Usecasestep">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="usecaseid" jdbcType="INTEGER" property="usecaseid" />
+    <result column="xh" jdbcType="INTEGER" property="xh" />
+    <result column="step" jdbcType="VARCHAR" property="step" />
+    <result column="result" jdbcType="INTEGER" property="result" />
+    <result column="expect" jdbcType="VARCHAR" property="expect" />
+    <result column="truth" jdbcType="VARCHAR" property="truth" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, usecaseid, xh, step, result, expect, truth, userid, username, createtime, updatetime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pms_usecasestep
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getUsecasesteplistByusecaseid" resultType="com.jschrj.pojo.test.Usecasestep">
+    select
+      id,usecaseid,xh,step,expect,truth
+    from pms_usecasestep
+    where usecaseid=#{usecaseid} order by createtime
+  </select>
+  <delete id="deleteByUsecaseid" parameterType="java.lang.Integer">
+    delete from pms_usecasestep
+    where usecaseid = #{usecaseid,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_usecasestep
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.test.Usecasestep">
+    insert into pms_usecasestep (id, usecaseid, xh, 
+      step, result, expect, 
+      truth, userid, username, 
+      createtime, updatetime)
+    values (#{id,jdbcType=INTEGER}, #{usecaseid,jdbcType=INTEGER}, #{xh,jdbcType=INTEGER}, 
+      #{step,jdbcType=VARCHAR}, #{result,jdbcType=INTEGER}, #{expect,jdbcType=VARCHAR}, 
+      #{truth,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, 
+      #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.test.Usecasestep">
+    insert into pms_usecasestep
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="usecaseid != null">
+        usecaseid,
+      </if>
+      <if test="xh != null">
+        xh,
+      </if>
+      <if test="step != null">
+        step,
+      </if>
+      <if test="result != null">
+        result,
+      </if>
+      <if test="expect != null">
+        expect,
+      </if>
+      <if test="truth != null">
+        truth,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="usecaseid != null">
+        #{usecaseid,jdbcType=INTEGER},
+      </if>
+      <if test="xh != null">
+        #{xh,jdbcType=INTEGER},
+      </if>
+      <if test="step != null">
+        #{step,jdbcType=VARCHAR},
+      </if>
+      <if test="result != null">
+        #{result,jdbcType=INTEGER},
+      </if>
+      <if test="expect != null">
+        #{expect,jdbcType=VARCHAR},
+      </if>
+      <if test="truth != null">
+        #{truth,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.test.Usecasestep">
+    update pms_usecasestep
+    <set>
+      <if test="usecaseid != null">
+        usecaseid = #{usecaseid,jdbcType=INTEGER},
+      </if>
+      <if test="xh != null">
+        xh = #{xh,jdbcType=INTEGER},
+      </if>
+      <if test="step != null">
+        step = #{step,jdbcType=VARCHAR},
+      </if>
+      <if test="result != null">
+        result = #{result,jdbcType=INTEGER},
+      </if>
+      <if test="expect != null">
+        expect = #{expect,jdbcType=VARCHAR},
+      </if>
+      <if test="truth != null">
+        truth = #{truth,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      updatetime = SYSDATE()
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.test.Usecasestep">
+    update pms_usecasestep
+    set usecaseid = #{usecaseid,jdbcType=INTEGER},
+      xh = #{xh,jdbcType=INTEGER},
+      step = #{step,jdbcType=VARCHAR},
+      result = #{result,jdbcType=INTEGER},
+      expect = #{expect,jdbcType=VARCHAR},
+      truth = #{truth,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE()
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

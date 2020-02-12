@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:jms="http://www.springframework.org/schema/jms"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+  http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://activemq.apache.org/schema/core
+  http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://www.springframework.org/schema/jms  
+  http://www.springframework.org/schema/jms/spring-jms.xsd
+  http://www.springframework.org/schema/context 
+  http://www.springframework.org/schema/context/spring-context.xsd">
+  
+  	<context:component-scan base-package="com.jschrj.activemq" />   
+  	
+  	<amq:connectionFactory id="amqConnectionFactory" 
+        brokerURL="tcp://127.0.0.1:61616" 
+        userName="jschrj" 
+        password="jschrj" />
+
+	<!-- 配置JMS连接池 -->
+    <bean id="connectionFactory"
+        class="org.springframework.jms.connection.CachingConnectionFactory">
+		<property name="targetConnectionFactory" ref="amqConnectionFactory"></property>
+        <property name="sessionCacheSize" value="100" />
+    </bean>
+
+	<!-- Spring JmsTemplate的消息生产者 start -->
+
+	<!-- 定义JmsTemplate的Queue类型 -->
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<!-- 这个connectionFactory对应的是我们定义的spring提供的那个ConnectionFactory对象 -->
+		<constructor-arg ref="connectionFactory"></constructor-arg>
+		<!-- 非pub/sub模型（发布/订阅），即队列模式 -->
+		<property name="pubSubDomain" value="false"></property>
+	</bean>
+
+	<!-- Spring JmsTemplate 的消息生产者end -->
+
+	<!-- 消息消费者 start -->
+
+	<!-- 定义Queue监听器 -->
+	<jms:listener-container destination-type="queue"
+		container-type="default" connection-factory="connectionFactory"
+		acknowledge="auto">
+		<!-- 可以监听多个destination -->
+		<jms:listener destination="errorlog_queue" ref="errorlog_queue_Listener"></jms:listener>
+		<jms:listener destination="optlog_queue" ref="optlog_queue_Listener"></jms:listener>
+		<jms:listener destination="mail_queue" ref="mail_queue_Listener"></jms:listener>
+	</jms:listener-container>
+	<bean id="errorlog_queue_Listener" class="com.jschrj.activemq.listener.ErrorlogMqListener" />
+	<bean id="optlog_queue_Listener" class="com.jschrj.activemq.listener.OptlogMqListener" />
+	<bean id="mail_queue_Listener" class="com.jschrj.activemq.listener.MailMqListener" />
+
+	<!-- 消息消费者end -->
+	
+</beans>

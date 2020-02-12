@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.system.IUserDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.system.User">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="PASSWORD" jdbcType="VARCHAR" property="password" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="STATUS" jdbcType="INTEGER" property="status" />
+    <result column="REALNAME" jdbcType="VARCHAR" property="realname" />
+    <result column="ORGID" jdbcType="INTEGER" property="orgid" />
+    <result column="DEPTID" jdbcType="INTEGER" property="deptid" />
+    <result column="ORGPOWERID" jdbcType="INTEGER" property="orgpowerid" />
+    <result column="EMAIL" jdbcType="VARCHAR" property="email" />
+    <result column="LISTID" jdbcType="INTEGER" property="listid" />
+    <result column="CREATETIME" jdbcType="VARCHAR" property="createtime" />
+    <result column="UPDATETIME" jdbcType="VARCHAR" property="updatetime" />
+    <result column="USERID" jdbcType="INTEGER" property="userid" />
+    <result column="USERNAME" jdbcType="VARCHAR" property="username" />
+    <result column="REMARK" jdbcType="VARCHAR" property="remark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, PASSWORD, TYPE, STATUS, REALNAME, ORGID, DEPTID, ORGPOWERID, EMAIL, LISTID,
+    CREATETIME, UPDATETIME, USERID, USERNAME, REMARK
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select A.ID, A.NAME, A.PASSWORD, A.TYPE, A.STATUS, A.REALNAME, A.ORGID, B.NAME ORGNAME, A.DEPTID, A.ORGPOWERID, A.EMAIL, A.LISTID,
+    A.CREATETIME, A.UPDATETIME, A.USERID, A.USERNAME, A.REMARK
+    from sys_user a,sys_organization b
+    where a.ID = #{id,jdbcType=INTEGER}
+    and a.orgid=b.id
+  </select>
+  <select id="selectByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from SYS_USER
+    where NAME = #{name,jdbcType=VARCHAR}
+  </select>
+  <select id="getUserByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from SYS_USER
+    where NAME = #{name,jdbcType=VARCHAR}
+  </select>
+  <select id="getUserByNameExceptId" parameterType="map" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_user
+    where name = #{name}
+    and id<![CDATA[<>]]>#{id}
+  </select>
+  <select id="getUserCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from sys_user a,sys_organization b
+    where a.orgid=b.id
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="realname!=null and realname!=''">
+    	and a.realname like CONCAT('%',#{realname,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="orgname!=null and orgname!=''">
+    	and b.name like CONCAT('%',#{orgname,jdbcType=VARCHAR},'%')
+    </if>
+  </select>
+  <select id="getUserPage" parameterType="map" resultMap="BaseResultMap">
+  	select ID,NAME,PASSWORD,TYPE,STATUS,REALNAME,ORGID,ORGNAME,DEPTID,ORGPOWERID,EMAIL,LISTID,
+  	CREATETIME,UPDATETIME,USERID,USERNAME,REMARK
+  	from
+    (select A.ID, A.NAME, A.PASSWORD, A.TYPE, A.STATUS, A.REALNAME, A.ORGID, B.NAME ORGNAME, A.DEPTID, A.ORGPOWERID, A.EMAIL, A.LISTID,
+    A.CREATETIME, A.UPDATETIME, A.USERID, A.USERNAME, A.REMARK
+    from sys_user a,sys_organization b
+    where a.orgid=b.id
+    <if test="status==0 or status==1">
+    	and a.status=#{status,jdbcType=INTEGER}
+    </if>
+    <if test="name!=null and name!=''">
+    	and a.name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="realname!=null and realname!=''">
+    	and a.realname like CONCAT('%',#{realname,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="orgname!=null and orgname!=''">
+    	and b.name like CONCAT('%',#{orgname,jdbcType=VARCHAR},'%')
+    </if>) p
+    <if test="order==null || order==''">
+    	ORDER BY ORGID,listid
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+    	ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="getOrgUserTree" resultType="com.jschrj.common.TreeHelper">
+      select id,name,0 pid,'false' nocheck
+      from sys_organization
+      where status=1
+      union ALL
+      select name id,realname name,orgid pid,'false' nocheck
+      from sys_user
+      where status=1
+      and orgid<![CDATA[<>]]>'0'
+  </select>
+  <select id="getUserList" resultType="com.jschrj.pojo.system.User">
+    select id id,realname
+    from sys_user
+    where status=1
+      order by listid
+  </select>
+  <select id="getTeammembers" parameterType="java.lang.Integer" resultType="com.jschrj.pojo.system.User">
+    select id id,realname
+    from sys_user
+    where status=1
+      and type =#{type}
+    order by listid
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_user
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.system.User">
+    insert into sys_user (ID, NAME, PASSWORD, 
+      TYPE, STATUS, REALNAME, 
+      ORGID, DEPTID, ORGPOWERID,
+      EMAIL, LISTID, CREATETIME,
+      UPDATETIME, USERID, USERNAME, 
+      REMARK)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{type,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{realname,jdbcType=VARCHAR}, 
+      #{orgid,jdbcType=INTEGER}, #{deptid,jdbcType=INTEGER}, #{orgpowerid,jdbcType=INTEGER}, 
+      #{email,jdbcType=VARCHAR}, #{listid,jdbcType=INTEGER}, #{createtime,jdbcType=TIMESTAMP},
+      #{updatetime,jdbcType=TIMESTAMP}, #{userid,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, 
+      #{remark,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.system.User">
+    insert into sys_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="password != null">
+        PASSWORD,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="realname != null">
+        REALNAME,
+      </if>
+      <if test="orgid != null">
+        ORGID,
+      </if>
+      <if test="deptid != null">
+        DEPTID,
+      </if>
+      <if test="orgpowerid != null">
+        ORGPOWERID,
+      </if>
+      <if test="email != null">
+        EMAIL,
+      </if>
+      <if test="listid != null">
+        LISTID,
+      </if>
+      CREATETIME,
+      <if test="updatetime != null">
+        UPDATETIME,
+      </if>
+      <if test="userid != null">
+        USERID,
+      </if>
+      <if test="username != null">
+        USERNAME,
+      </if>
+      <if test="remark != null">
+        REMARK,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="realname != null">
+        #{realname,jdbcType=VARCHAR},
+      </if>
+      <if test="orgid != null">
+        #{orgid,jdbcType=INTEGER},
+      </if>
+      <if test="deptid != null">
+        #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="orgpowerid != null">
+        #{orgpowerid,jdbcType=INTEGER},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="listid != null">
+        #{listid,jdbcType=INTEGER},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.system.User">
+    update sys_user
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        PASSWORD = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="realname != null">
+        REALNAME = #{realname,jdbcType=VARCHAR},
+      </if>
+      <if test="orgid != null">
+        ORGID = #{orgid,jdbcType=INTEGER},
+      </if>
+      <if test="deptid != null">
+        DEPTID = #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="orgpowerid != null">
+        ORGPOWERID = #{orgpowerid,jdbcType=INTEGER},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="listid != null">
+        LISTID = #{listid,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null">
+        CREATETIME = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+        UPDATETIME = SYSDATE(),
+      <if test="userid != null">
+        USERID = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        USERNAME = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        REMARK = #{remark,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.system.User">
+    update sys_user
+    set NAME = #{name,jdbcType=VARCHAR},
+      PASSWORD = #{password,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      STATUS = #{status,jdbcType=INTEGER},
+      REALNAME = #{realname,jdbcType=VARCHAR},
+      ORGID = #{orgid,jdbcType=INTEGER},
+      DEPTID = #{deptid,jdbcType=INTEGER},
+      ORGPOWERID = #{orgpowerid,jdbcType=INTEGER},
+      email = #{email,jdbcType=VARCHAR},
+      LISTID = #{listid,jdbcType=INTEGER},
+      CREATETIME = #{createtime,jdbcType=TIMESTAMP},
+      UPDATETIME = #{updatetime,jdbcType=TIMESTAMP},
+      USERID = #{userid,jdbcType=INTEGER},
+      USERNAME = #{username,jdbcType=VARCHAR},
+      REMARK = #{remark,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

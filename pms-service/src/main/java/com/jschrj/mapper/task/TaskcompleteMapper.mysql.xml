@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.task.ITaskcompleteDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.task.Taskcomplete">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="taskid" jdbcType="INTEGER" property="taskid" />
+    <result column="estimate" jdbcType="INTEGER" property="estimate" />
+    <result column="codeurl" jdbcType="VARCHAR" property="codeurl" />
+    <result column="sqlname" jdbcType="VARCHAR" property="sqlname" />
+    <result column="sql" jdbcType="VARCHAR" property="sql" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jschrj.pojo.task.Taskcomplete">
+    <result column="testremark" jdbcType="LONGVARBINARY" property="testremark" />
+    <result column="releaseremark" jdbcType="LONGVARBINARY" property="releaseremark" />
+    <result column="overdueremark" jdbcType="LONGVARBINARY" property="overdueremark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, taskid, estimate, codeurl, sqlname, `sql`, userid, username, createtime, updatetime
+  </sql>
+  <sql id="Blob_Column_List">
+      testremark, releaseremark, overdueremark,
+      CONVERT(testremark USING utf8) testremarkhtml,
+      CONVERT(releaseremark USING utf8) releaseremarkhtml,
+      CONVERT(overdueremark USING utf8) overdueremarkhtml
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from pms_taskcomplete
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByTaskid" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from pms_taskcomplete
+    where taskid = #{taskid,jdbcType=INTEGER}
+  </select>
+  <select id="getCompletedCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_taskcomplete a,pms_story b,pms_task c,base_project d,base_source e
+    where b.status<![CDATA[<>]]>0
+    and a.taskid=c.id and c.storyid=b.id
+    and c.status=2 and b.project=d.id
+    and b.source=e.id and a.userid=#{userid}
+    <if test="taskid!=null and taskid!=''">
+      and a.taskid=#{taskid,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and c.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>
+  </select>
+  <select id="getCompletedPage" parameterType="map" resultMap="BaseResultMap">
+    select
+    id, taskid, title, projectname, sourcename, createtime,deadline
+    from(select
+    a.id, a.taskid, c.title, d.name projectname, e.name sourcename, a.createtime, c.deadline
+    from pms_taskcomplete a,pms_story b,pms_task c,base_project d,base_source e
+    where b.status<![CDATA[<>]]>0
+    and a.taskid=c.id and c.storyid=b.id
+    and c.status=2 and b.project=d.id
+    and b.source=e.id and a.userid=#{userid}
+    <if test="taskid!=null and taskid!=''">
+      and a.taskid=#{taskid,jdbcType=VARCHAR}
+    </if>
+    <if test="title!=null and title!=''">
+      and c.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="starttime!=null and starttime!=''">
+      and a.createtime <![CDATA[>=]]> #{starttime}
+    </if>
+    <if test="endtime!=null and endtime!=''">
+      and a.createtime <![CDATA[<=]]> #{endtime}
+    </if>) m
+    <if test="order==null || order==''">
+      ORDER BY createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_taskcomplete
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.task.Taskcomplete">
+    insert into pms_taskcomplete (id, taskid, estimate, 
+      codeurl, `sql`, userid,
+      username, createtime, updatetime, 
+      testremark, releaseremark,
+      overdueRemark)
+    values (#{id,jdbcType=INTEGER}, #{taskid,jdbcType=INTEGER}, #{estimate,jdbcType=INTEGER}, 
+      #{codeurl,jdbcType=VARCHAR}, #{sql,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER},
+      #{username,jdbcType=VARCHAR}, #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR},
+      #{testremark,jdbcType=LONGVARBINARY}, #{releaseremark,jdbcType=LONGVARBINARY}, 
+      #{overdueremark,jdbcType=LONGVARBINARY})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jschrj.pojo.task.Taskcomplete">
+    insert into pms_taskcomplete
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="taskid != null">
+        taskid,
+      </if>
+      <if test="estimate != null">
+        estimate,
+      </if>
+      <if test="codeurl != null">
+        codeurl,
+      </if>
+      <if test="sqlname != null">
+        sqlname,
+      </if>
+      <if test="sql != null">
+        `sql`,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+      <if test="testremark != null">
+        testremark,
+      </if>
+      <if test="releaseremark != null">
+        releaseremark,
+      </if>
+      <if test="overdueremark != null">
+        overdueremark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="taskid != null">
+        #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="estimate != null">
+        #{estimate,jdbcType=INTEGER},
+      </if>
+      <if test="codeurl != null">
+        #{codeurl,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlname != null">
+        #{sqlname,jdbcType=VARCHAR},
+      </if>
+      <if test="sql != null">
+        #{sql,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+      <if test="testremark != null">
+        #{testremark,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="releaseremark != null">
+        #{releaseremark,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="overdueremark != null">
+        #{overdueremark,jdbcType=LONGVARBINARY},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.task.Taskcomplete">
+    update pms_taskcomplete
+    <set>
+      <if test="taskid != null">
+        taskid = #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="estimate != null">
+        estimate = #{estimate,jdbcType=INTEGER},
+      </if>
+      <if test="codeurl != null">
+        codeurl = #{codeurl,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlname != null">
+          sqlname = #{sqlname,jdbcType=VARCHAR},
+      </if>
+      <if test="sql != null">
+        `sql` = #{sql,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      updatetime = SYSDATE(),
+      <if test="testremark != null">
+        testremark = #{testremark,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="releaseremark != null">
+        releaseremark = #{releaseremark,jdbcType=LONGVARBINARY},
+      </if>
+      <if test="overdueremark != null">
+        overdueremark = #{overdueremark,jdbcType=LONGVARBINARY},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.jschrj.pojo.task.Taskcomplete">
+    update pms_taskcomplete
+    set taskid = #{taskid,jdbcType=INTEGER},
+      estimate = #{estimate,jdbcType=INTEGER},
+      codeurl = #{codeurl,jdbcType=VARCHAR},
+      sqlname = #{sqlname,jdbcType=VARCHAR},
+      `sql` = #{sql,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE(),
+      testremark = #{testremark,jdbcType=LONGVARBINARY},
+      releaseremark = #{releaseremark,jdbcType=LONGVARBINARY},
+      overdueremark = #{overdueremark,jdbcType=LONGVARBINARY}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.task.Taskcomplete">
+    update pms_taskcomplete
+    set taskid = #{taskid,jdbcType=INTEGER},
+      estimate = #{estimate,jdbcType=INTEGER},
+      codeurl = #{codeurl,jdbcType=VARCHAR},
+      sqlname = #{sqlname,jdbcType=VARCHAR},
+      `sql` = #{sql,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE(),
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

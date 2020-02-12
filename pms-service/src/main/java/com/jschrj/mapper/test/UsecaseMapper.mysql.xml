@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jschrj.dao.test.IUsecaseDao">
+  <resultMap id="BaseResultMap" type="com.jschrj.pojo.test.Usecase">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="storyid" jdbcType="INTEGER" property="storyid" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="stage" jdbcType="VARCHAR" property="stage" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="filename" jdbcType="VARCHAR" property="filename" />
+    <result column="fileurl" jdbcType="VARCHAR" property="fileurl" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="createtime" jdbcType="VARCHAR" property="createtime" />
+    <result column="updatetime" jdbcType="VARCHAR" property="updatetime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, storyid, type, stage, status, title, filename, fileurl, userid, username, createtime, 
+    updatetime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pms_usecase
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getUsecaseByStoryid" resultType="com.jschrj.pojo.test.Usecase">
+    select a.id,a.storyid,a.status,a.type,a.stage,a.title,a.createtime,a.username
+    from pms_usecase a
+    where a.status=1 and a.storyid=#{storyid}
+      order by createtime
+  </select>
+  <select id="getUsecaseCounts" parameterType="map" resultType="int">
+    select count(a.id)
+    from pms_usecase a,pms_story b
+    where  a.status<![CDATA[<>]]>0 and a.storyid=b.id
+    <if test="storyid!=null and storyid!=''">
+      and b.id=#{storyid,jdbcType=VARCHAR}
+    </if>
+    <if test="storytitle!=null and storytitle!=''">
+      and b.title like CONCAT('%',#{storytitle,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>
+  </select>
+  <select id="getUsecasePage" parameterType="map" resultMap="BaseResultMap">
+    select
+    storyid, storytitle,id, type,title, username, createtime
+    from(select
+    b.id storyid, b.title storytitle, a.id, a.type, a.title, a.username, a.createtime
+    from pms_usecase a,pms_story b
+    where  a.status<![CDATA[<>]]>0 and a.storyid=b.id
+    <if test="storyid!=null and storyid!=''">
+      and b.id=#{storyid,jdbcType=VARCHAR}
+    </if>
+    <if test="storytitle!=null and storytitle!=''">
+      and b.title like CONCAT('%',#{storytitle,jdbcType=VARCHAR},'%')
+    </if>
+    <if test="title!=null and title!=''">
+      and a.title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+    </if>) m
+    <if test="order==null || order==''">
+      ORDER BY createtime desc
+    </if>
+    <if test="order!=null and order!='' and sort!=null and sort!=''">
+      ORDER BY ${order} ${sort}
+    </if>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pms_usecase
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jschrj.pojo.test.Usecase">
+    insert into pms_usecase (id, storyid, type, 
+      stage, status, title, 
+      filename, fileurl, userid, 
+      username, createtime, updatetime
+      )
+    values (#{id,jdbcType=INTEGER}, #{storyid,jdbcType=INTEGER}, #{type,jdbcType=INTEGER}, 
+      #{stage,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR},
+      #{filename,jdbcType=VARCHAR}, #{fileurl,jdbcType=VARCHAR}, #{userid,jdbcType=INTEGER}, 
+      #{username,jdbcType=VARCHAR}, #{createtime,jdbcType=VARCHAR}, #{updatetime,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" keyProperty="id" useGeneratedKeys="true" parameterType="com.jschrj.pojo.test.Usecase">
+    insert into pms_usecase
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="storyid != null">
+        storyid,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="stage != null">
+        stage,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="filename != null">
+        filename,
+      </if>
+      <if test="fileurl != null">
+        fileurl,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      createtime,
+      <if test="updatetime != null">
+        updatetime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="storyid != null">
+        #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="stage != null">
+        #{stage,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="filename != null">
+        #{filename,jdbcType=VARCHAR},
+      </if>
+      <if test="fileurl != null">
+        #{fileurl,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      SYSDATE(),
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jschrj.pojo.test.Usecase">
+    update pms_usecase
+    <set>
+      <if test="storyid != null">
+        storyid = #{storyid,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="stage != null">
+        stage = #{stage,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="filename != null">
+        filename = #{filename,jdbcType=VARCHAR},
+      </if>
+      <if test="fileurl != null">
+        fileurl = #{fileurl,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      updatetime = SYSDATE()
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jschrj.pojo.test.Usecase">
+    update pms_usecase
+    set storyid = #{storyid,jdbcType=INTEGER},
+      type = #{type,jdbcType=INTEGER},
+      stage = #{stage,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      filename = #{filename,jdbcType=VARCHAR},
+      fileurl = #{fileurl,jdbcType=VARCHAR},
+      userid = #{userid,jdbcType=INTEGER},
+      username = #{username,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=VARCHAR},
+      updatetime = SYSDATE()
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
